@@ -1,0 +1,178 @@
+@page "/registrations"
+@page "/registrations/my"
+@inject IRegistrationService RegistrationService
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>@(AuthState.IsParticipant ? "My Registrations" : "All Registrations")</PageTitle>
+
+<div class="container py-4">
+    @if (!string.IsNullOrEmpty(_success))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @_success
+            <button type="button" class="btn-close" @onclick="() => _success = string.Empty"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @_error
+            <button type="button" class="btn-close" @onclick="() => _error = string.Empty"></button>
+        </div>
+    }
+
+    @if (!AuthState.IsAuthenticated)
+    {
+        <div class="alert alert-warning">
+            Please <a href="/login">sign in</a> to view registrations.
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold mb-0">
+                @if (AuthState.IsParticipant)
+                {
+                    <span>My Registrations</span>
+                }
+                else
+                {
+                    <span>All Registrations</span>
+                }
+            </h2>
+            <span class="text-muted small">@_registrations.Count registration(s)</span>
+        </div>
+
+        @if (_isLoading)
+        {
+            <p class="text-muted">Loading…</p>
+        }
+        else if (!_registrations.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <p>No registrations yet.</p>
+                <a href="/events" class="btn btn-primary">Browse Events</a>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Event</th>
+                                <th>Event Date</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in _registrations)
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="/events/@r.EventId">@r.EventName</a>
+                                    </td>
+                                    <td>@r.EventStartDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@r.RegistrationDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-@r.StatusColour">@r.StatusName</span>
+                                    </td>
+                                    <td class="text-end">
+                                        @if (r.Status != Domain.Enums.RegistrationStatus.Cancelled
+                                            && CanCancel(r))
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    @onclick="() => Cancel(r.Id)">
+                                                Cancel
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<RegistrationViewModel> _registrations = new();
+    private bool _isLoading = true;
+    private string _success = string.Empty;
+    private string _error = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnAuthStateChanged += AuthChanged;
+        await Load();
+    }
+
+    private async void AuthChanged() => await InvokeAsync(async () => await Load());
+
+    private bool CanCancel(RegistrationViewModel r)
+    {
+        if (AuthState.IsAdmin) return true;
+        // Participant can only cancel their own
+        return AuthState.IsAuthenticated
+            && r.ParticipantEmail == AuthState.CurrentUser.Email;
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            _isLoading = true;
+            if (!AuthState.IsAuthenticated)
+            {
+                _registrations = new();
+                return;
+            }
+
+            if (AuthState.IsAdmin)
+            {
+                _registrations = (await RegistrationService.GetAllRegistrationsAsync())
+                    .Select(RegistrationViewModel.FromEntity).ToList();
+            }
+            else if (AuthState.IsParticipant && AuthState.UserId.HasValue)
+            {
+                // Participants only see their own registrations
+                _registrations = (await RegistrationService
+                    .GetRegistrationsByParticipantAsync(AuthState.UserId.Value))
+                    .Select(RegistrationViewModel.FromEntity).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load registrations: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task Cancel(int id)
+    {
+        try
+        {
+            _error = string.Empty;
+            var reason = AuthState.IsAdmin ? "Cancelled by admin" : "Cancelled by participant";
+            await RegistrationService.CancelRegistrationAsync(id, reason);
+            _success = "Registration cancelled.";
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    public void Dispose() => AuthState.OnAuthStateChanged -= AuthChanged;
+}

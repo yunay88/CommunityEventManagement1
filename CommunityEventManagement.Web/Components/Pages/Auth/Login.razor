@@ -1,0 +1,127 @@
+@page "/login"
+@using CommunityEventManagement.Web.Services
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Sign In — Community Events</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white text-center py-3">
+                    <h4 class="mb-0 fw-bold">Sign In</h4>
+                    <small class="text-muted">Community Event Management System</small>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!string.IsNullOrEmpty(_successMessage))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @_successMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @_errorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="@_model" OnValidSubmit="HandleLoginAsync">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input type="email" @bind="_model.Email" class="form-control form-control-lg"
+                                   placeholder="you@example.com" />
+                            <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Password</label>
+                            <input type="password" @bind="_model.Password" class="form-control form-control-lg"
+                                   placeholder="Enter your password" />
+                            <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@_isProcessing">
+                            @if (_isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Signing in...</span>
+                            }
+                            else
+                            {
+                                <span>Sign In</span>
+                            }
+                        </button>
+                    </EditForm>
+                </div>
+                <div class="card-footer text-center bg-white py-3">
+                    <small class="text-muted">
+                        Don't have an account?
+                        <a href="/register" class="fw-semibold">Create one</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginViewModel _model = new();
+    private string _errorMessage = string.Empty;
+    private string _successMessage = string.Empty;
+    private bool _isProcessing = false;
+
+    protected override void OnInitialized()
+    {
+        // Auto-fill if just registered
+        var uri = Navigation.Uri;
+        if (uri.Contains("registered=true"))
+        {
+            _successMessage = "Account created successfully. Please sign in.";
+        }
+
+        if (AuthState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/events");
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        _errorMessage = string.Empty;
+        _successMessage = string.Empty;
+        _isProcessing = true;
+
+        try
+        {
+            var success = await AuthState.LoginAsync(_model.Email, _model.Password);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/events", forceLoad: false);
+            }
+            else
+            {
+                _errorMessage = "Invalid email or password.";
+                _model.Password = string.Empty;
+            }
+        }
+        catch (CommunityEventManagement.Domain.Exceptions.AuthenticationException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Sign-in error: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

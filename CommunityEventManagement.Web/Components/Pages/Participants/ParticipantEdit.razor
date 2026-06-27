@@ -1,0 +1,110 @@
+@page "/participants/edit/{Id:int}"
+@inject IParticipantService ParticipantService
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Participant</PageTitle>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private EditParticipantModel? _model;
+    private bool _loading = true;
+    private bool _submitting = false;
+    private string _error = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (!AuthState.IsAdmin)
+        {
+            Navigation.NavigateTo("/access-denied", forceLoad: true);
+        }
+        else
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var p = await ParticipantService.GetParticipantByIdAsync(Id);
+            if (p != null) _model = EditParticipantModel.FromEntity(p);
+            else _error = "Participant not found.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+}
+
+@if (AuthState.IsAdmin && _loading)
+{
+    <p class="text-muted">Loading...</p>
+}
+else if (AuthState.IsAdmin && _model != null)
+{
+    <h2 class="fw-bold mb-3">Edit Participant</h2>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="alert alert-danger">@_error</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="alert alert-warning" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">First Name <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => _model.FirstName)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Last Name <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => _model.LastName)" class="text-danger small" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="_model.Email" class="form-control" />
+                    <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Phone Number</label>
+                    <InputText @bind-Value="_model.PhoneNumber" class="form-control" />
+                    <ValidationMessage For="@(() => _model.PhoneNumber)" class="text-danger small" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                        @if (_submitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Save Changes
+                    </button>
+                    <a href="/participants/@Id" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private async Task HandleSubmit()
+    {
+        if (_model == null || !AuthState.IsAdmin) return;
+        try
+        {
+            _submitting = true;
+            await ParticipantService.UpdateParticipantAsync(
+                Id, _model.FirstName, _model.LastName, _model.Email, _model.PhoneNumber);
+            Navigation.NavigateTo($"/participants/{Id}");
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _submitting = false; }
+    }
+}

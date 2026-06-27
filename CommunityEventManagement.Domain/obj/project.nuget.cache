@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "tJY2vs9w0GGQRPoevTkFVZymG1jyad71JYLbXuR1qxrtuFYuJXV0tuYADmDhukzvgP7Url4R/KgUD8XgavqGRw==",
+  "success": true,
+  "projectFilePath": "/Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Domain/CommunityEventManagement.Domain.csproj",
+  "expectedPackageFiles": [
+    "/Users/bishalthapa/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
+    "/Users/bishalthapa/.nuget/packages/system.componentmodel.annotations/5.0.0/system.componentmodel.annotations.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

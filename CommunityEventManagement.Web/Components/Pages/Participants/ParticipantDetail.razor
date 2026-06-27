@@ -1,0 +1,68 @@
+@page "/participants/{Id:int}"
+@inject IParticipantService ParticipantService
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Participant Detail</PageTitle>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private ParticipantViewModel? _p;
+    private bool _loading = true;
+
+    protected override void OnInitialized()
+    {
+        if (!AuthState.IsAdmin)
+        {
+            Navigation.NavigateTo("/access-denied", forceLoad: true);
+        }
+        else
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var entity = await ParticipantService.GetParticipantWithRegistrationsAsync(Id);
+        if (entity != null) _p = ParticipantViewModel.FromEntity(entity);
+        _loading = false;
+    }
+}
+
+@if (_loading)
+{
+    <p class="text-muted">Loading...</p>
+}
+else if (_p == null)
+{
+    <div class="alert alert-warning">Participant not found.</div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold mb-0">@_p.FullName</h2>
+        <div class="d-flex gap-2">
+            <a href="/participants" class="btn btn-outline-secondary">Back</a>
+            <a href="/participants/edit/@Id" class="btn btn-primary">Edit</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@_p.Email</dd>
+
+                <dt class="col-sm-3">Phone</dt>
+                <dd class="col-sm-9">@(_p.PhoneNumber ?? "—")</dd>
+
+                <dt class="col-sm-3">Active Registrations</dt>
+                <dd class="col-sm-9">@_p.ActiveRegistrations</dd>
+
+                <dt class="col-sm-3">Joined</dt>
+                <dd class="col-sm-9">@_p.CreatedAt.ToString("dd MMM yyyy")</dd>
+            </dl>
+        </div>
+    </div>
+}

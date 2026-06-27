@@ -1,0 +1,265 @@
+@page "/events/create"
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject IEventService EventService
+@inject IVenueService VenueService
+@inject IActivityService ActivityService
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Create Event</PageTitle>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+}
+
+@if (!AuthState.IsAdmin)
+{
+    <div class="alert alert-danger">
+        <h5>Admin Access Required</h5>
+        <p>You must be logged in as an Administrator to create events.</p>
+        <a href="/login" class="btn btn-primary btn-sm">Login</a>
+    </div>
+}
+else
+{
+<h2 class="fw-bold mb-3">Create Event</h2>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="alert alert-warning" />
+
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Event Name <span class="text-danger">*</span></label>
+                    <input @bind="_model.Name" class="form-control" placeholder="Enter event name" />
+                    <ValidationMessage For="@(() => _model.Name)" class="text-danger small" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea @bind="_model.Description" class="form-control" rows="3"
+                          placeholder="Describe your event"></textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Start Date & Time <span class="text-danger">*</span></label>
+                    <input type="datetime-local" @bind="_model.StartDate" class="form-control" />
+                    <ValidationMessage For="@(() => _model.StartDate)" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">End Date & Time <span class="text-danger">*</span></label>
+                    <input type="datetime-local" @bind="_model.EndDate" class="form-control" />
+                    <ValidationMessage For="@(() => _model.EndDate)" class="text-danger small" />
+                </div>
+            </div>
+
+            <!-- ✅ MULTI-VENUE UI: select one or more venues, pick one as primary -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Venues</label>
+                <small class="text-muted d-block mb-2">
+                    Select one or more venues (the brief requires "various Venues" — M:N).
+                    One must be marked as Primary.
+                </small>
+                <div class="border rounded p-3" style="max-height: 240px; overflow-y: auto;">
+                    @if (_venues != null)
+                    {
+                        @foreach (var venue in _venues)
+                        {
+                            var isSelected = _model.SelectedVenueIds.Contains(venue.Id);
+                            <div class="form-check mb-2">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="venue_@venue.Id"
+                                       checked="@isSelected"
+                                       disabled="@(!isSelected && _model.SelectedVenueIds.Count == 0 && venue.MaxCapacity < 100)"
+                                       @onchange="e => ToggleVenue(venue.Id, (bool)e.Value!)" />
+                                <label class="form-check-label" for="venue_@venue.Id">
+                                    <strong>@venue.Name</strong>
+                                    <small class="text-muted">
+                                        — @venue.City
+                                        (Capacity: @venue.MaxCapacity)
+                                    </small>
+                                    @if (isSelected)
+                                    {
+                                        <span class="badge bg-primary ms-2">Selected</span>
+                                        @if (_model.PrimaryVenueId == venue.Id)
+                                        {
+                                            <span class="badge bg-warning ms-1">Primary</span>
+                                        }
+                                        else
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-warning ms-2"
+                                                    @onclick="() => SetPrimary(venue.Id)">
+                                                Make Primary
+                                            </button>
+                                        }
+                                    }
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+                @if (_model.SelectedVenueIds.Count == 0)
+                {
+                    <small class="text-muted">No venues selected. Select at least one above.</small>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Activities</label>
+                <small class="text-muted d-block mb-2">
+                    Select which activities belong to this event (workshop, talk, game, etc.)
+                </small>
+                <div class="border rounded p-3" style="max-height: 240px; overflow-y: auto;">
+                    @if (_activities != null)
+                    {
+                        @foreach (var activity in _activities)
+                        {
+                            var isSelected = _model.SelectedActivityIds.Contains(activity.Id);
+                            <div class="form-check mb-2">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="act_@activity.Id"
+                                       checked="@isSelected"
+                                       @onchange="e => ToggleActivity(activity.Id, (bool)e.Value!)" />
+                                <label class="form-check-label" for="act_@activity.Id">
+                                    @activity.Name
+                                    <span class="badge bg-light text-dark ms-2">@activity.TypeName</span>
+                                    <small class="text-muted">(@activity.DurationFormatted)</small>
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Create Event
+                </button>
+                <a href="/events" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+}
+
+@code {
+    private CreateEventModel _model = new();
+    private List<VenueViewModel> _venues = new();
+    private List<ActivityViewModel> _activities = new();
+    private bool _isSubmitting = false;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthState.IsAdmin)
+        {
+            Navigation.NavigateTo("/access-denied", forceLoad: true);
+            return;
+        }
+
+        try
+        {
+            var venues = await VenueService.GetAllVenuesAsync();
+            _venues = venues.Select(VenueViewModel.FromEntity).ToList();
+
+            var activities = await ActivityService.GetAllActivitiesAsync();
+            _activities = activities.Select(ActivityViewModel.FromEntity).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error loading form data: {ex.Message}";
+        }
+    }
+
+    private void ToggleVenue(int venueId, bool isChecked)
+    {
+        if (isChecked && !_model.SelectedVenueIds.Contains(venueId))
+        {
+            _model.SelectedVenueIds.Add(venueId);
+            // If this is the first venue, make it primary automatically
+            if (_model.SelectedVenueIds.Count == 1)
+                _model.PrimaryVenueId = venueId;
+        }
+        else if (!isChecked)
+        {
+            _model.SelectedVenueIds.Remove(venueId);
+            // If we removed the primary, set a new one
+            if (_model.PrimaryVenueId == venueId)
+            {
+                _model.PrimaryVenueId = _model.SelectedVenueIds.FirstOrDefault();
+            }
+        }
+    }
+
+    private void SetPrimary(int venueId)
+    {
+        if (_model.SelectedVenueIds.Contains(venueId))
+            _model.PrimaryVenueId = venueId;
+    }
+
+    private void ToggleActivity(int activityId, bool isChecked)
+    {
+        if (isChecked && !_model.SelectedActivityIds.Contains(activityId))
+            _model.SelectedActivityIds.Add(activityId);
+        else if (!isChecked)
+            _model.SelectedActivityIds.Remove(activityId);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!AuthState.IsAdmin) return;
+        try
+        {
+            _isSubmitting = true;
+            _errorMessage = string.Empty;
+
+            // Validate: at least one venue selected, exactly one primary
+            if (_model.SelectedVenueIds.Count == 0)
+            {
+                _errorMessage = "Please select at least one venue.";
+                return;
+            }
+            if (_model.PrimaryVenueId == null || !_model.SelectedVenueIds.Contains(_model.PrimaryVenueId.Value))
+            {
+                _errorMessage = "Please select a primary venue from the selected venues.";
+                return;
+            }
+
+            var createdEvent = await EventService.CreateEventWithVenuesAsync(
+                _model.Name,
+                _model.Description,
+                _model.StartDate,
+                _model.EndDate,
+                _model.SelectedVenueIds.ToList(),
+                _model.PrimaryVenueId!.Value,
+                _model.SelectedActivityIds.ToList());
+
+            Navigation.NavigateTo($"/events/{createdEvent.Id}");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

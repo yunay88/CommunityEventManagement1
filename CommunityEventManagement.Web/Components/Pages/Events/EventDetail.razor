@@ -1,0 +1,363 @@
+@page "/events/{Id:int}"
+@using CommunityEventManagement.Web.Services
+@inject IEventService EventService
+@inject IRegistrationService RegistrationService
+@inject IParticipantService ParticipantService
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>@(_event?.Name ?? "Event Detail")</PageTitle>
+
+<div class="container py-4">
+    @* ── ALWAYS-VISIBLE ERROR BANNER (so we can see what's broken) ── *@
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @_errorMessage
+        </div>
+    }
+
+    @if (_isLoading)
+    {
+        <p class="text-muted">Loading event details…</p>
+    }
+    else if (_event == null)
+    {
+        <div class="alert alert-warning">
+            <h4>Event not found</h4>
+            <p>The event you're looking for doesn't exist or has been removed.</p>
+            <a href="/events" class="btn btn-primary">Back to Events</a>
+        </div>
+    }
+    else
+    {
+        @* ── PAGE HEADER ── *@
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/events">Events</a></li>
+                        <li class="breadcrumb-item active">@_event.Name</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-bold mb-1">@_event.Name</h1>
+                <span class="badge bg-@_event.StatusColour">@_event.StatusBadge</span>
+            </div>
+            <div class="d-flex gap-2">
+                @if (AuthState.IsAdmin)
+                {
+                    <a href="/events/edit/@_event.Id" class="btn btn-outline-secondary">Edit</a>
+                }
+                <a href="/events" class="btn btn-outline-secondary">Back</a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @* ── MAIN CONTENT ── *@
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">Details</div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(_event.Description))
+                        {
+                            <p>@_event.Description</p>
+                            <hr />
+                        }
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Start</dt>
+                            <dd class="col-sm-9">@_event.StartDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
+
+                            <dt class="col-sm-3">End</dt>
+                            <dd class="col-sm-9">@_event.EndDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
+
+                            <dt class="col-sm-3">Duration</dt>
+                            <dd class="col-sm-9">@_event.DurationFormatted</dd>
+
+                            @if (_event.Venues?.Any() == true)
+                            {
+                                <dt class="col-sm-3">Venue@((_event.Venues.Count > 1) ? "s" : "")</dt>
+                                <dd class="col-sm-9">
+                                    @foreach (var v in _event.Venues)
+                                    {
+                                        <div>
+                                            <strong>@v.Name</strong>
+                                            @if (v.IsPrimary) { <span class="badge bg-primary ms-2">Primary</span> }
+                                            <br />
+                                            <small class="text-muted">@v.Location</small>
+                                        </div>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+
+                @* ── ACTIVITIES ── *@
+                @if (_event.Activities?.Any() == true)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header fw-bold">Activities (@_event.Activities.Count)</div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                @foreach (var activity in _event.Activities)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-2 d-flex align-items-center gap-2">
+                                            <span class="badge bg-secondary">@activity.TypeName</span>
+                                            <span>@activity.Name</span>
+                                            <small class="text-muted ms-auto">@activity.DurationFormatted</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @* ── REGISTRATIONS (Admin only) ── *@
+                @if (AuthState.IsAdmin && _event.Registrations?.Any() == true)
+                {
+                    <div class="card">
+                        <div class="card-header fw-bold">Registered Participants (@_event.Registrations.Count)</div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Participant</th>
+                                        <th>Email</th>
+                                        <th>Registered</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var reg in _event.Registrations)
+                                    {
+                                        <tr>
+                                            <td>@reg.ParticipantName</td>
+                                            <td>@reg.ParticipantEmail</td>
+                                            <td>@reg.RegistrationDate.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-@reg.StatusColour">@reg.StatusName</span>
+                                            </td>
+                                            <td>
+                                                @if (reg.Status != Domain.Enums.RegistrationStatus.Cancelled)
+                                                {
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                            @onclick="() => CancelRegistration(reg.Id)">
+                                                        Cancel
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* ── REGISTRATION SIDEBAR ── *@
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header fw-bold bg-success text-white">
+                        Register for this Event
+                    </div>
+                    <div class="card-body">
+                        @if (!AuthState.IsAuthenticated)
+                        {
+                            <p class="text-muted small mb-2">Please sign in to register.</p>
+                            <a href="/login?returnUrl=/events/@Id" class="btn btn-primary w-100">
+                                Sign in to Register
+                            </a>
+                        }
+                        else if (AuthState.IsAdmin)
+                        {
+                            <p class="text-muted small mb-0">
+                                As an admin, you manage registrations from the table on the left.
+                            </p>
+                        }
+                        else if (_isRegistered)
+                        {
+                            <div class="alert alert-success mb-2">
+                                You are registered for this event.
+                            </div>
+                            <button class="btn btn-outline-danger w-100"
+                                    @onclick="CancelMyRegistration"
+                                    disabled="@_isRegistering">
+                                @if (_isRegistering)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Cancel My Registration
+                            </button>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-2">
+                                Registering as:<br />
+                                <strong>@AuthState.CurrentUser.FullName</strong><br />
+                                @AuthState.CurrentUser.Email
+                            </p>
+                            <button class="btn btn-success w-100"
+                                    @onclick="RegisterMe"
+                                    disabled="@_isRegistering">
+                                @if (_isRegistering)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Register Now
+                            </button>
+                        }
+                        <hr />
+                        <div class="small text-muted">
+                            @_event.ParticipantCount participant(s) registered
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private EventDetailViewModel? _event;
+    private bool _isLoading = true;
+    private bool _isRegistering = false;
+    private string _errorMessage = string.Empty;
+    private bool _isRegistered = false;
+    private int? _myRegistrationId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnAuthStateChanged += AuthChanged;
+        await LoadAsync();
+    }
+
+    private async void AuthChanged() => await InvokeAsync(async () => await LoadAsync());
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = string.Empty;
+
+            var entity = await EventService.GetEventWithDetailsAsync(Id);
+
+            if (entity != null)
+            {
+                _event = EventDetailViewModel.FromEntity(entity);
+                await CheckMyRegistrationAsync();
+            }
+            else
+            {
+                _event = null;
+                _errorMessage = $"Event with ID {Id} was not found in the database.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _event = null;
+            _errorMessage = $"Failed to load event: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CheckMyRegistrationAsync()
+    {
+        _isRegistered = false;
+        _myRegistrationId = null;
+
+        if (AuthState.IsAuthenticated && AuthState.UserId.HasValue && _event?.Registrations != null)
+        {
+            var myReg = _event.Registrations.FirstOrDefault(r =>
+                string.Equals(r.ParticipantEmail, AuthState.CurrentUser.Email,
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (myReg != null)
+            {
+                _isRegistered = true;
+                _myRegistrationId = myReg.Id;
+            }
+        }
+        await Task.CompletedTask;
+    }
+
+    private async Task RegisterMe()
+    {
+        if (!AuthState.IsAuthenticated || !AuthState.UserId.HasValue)
+        {
+            Navigation.NavigateTo($"/login?returnUrl=/events/{Id}");
+            return;
+        }
+        try
+        {
+            _isRegistering = true;
+            _errorMessage = string.Empty;
+
+            await RegistrationService.RegisterParticipantAsync(AuthState.UserId.Value, Id);
+            await LoadAsync();
+        }
+        catch (CommunityEventManagement.Domain.Exceptions.DuplicateRegistrationException)
+        {
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Registration failed: {ex.Message}";
+        }
+        finally
+        {
+            _isRegistering = false;
+        }
+    }
+
+    private async Task CancelMyRegistration()
+    {
+        if (!_myRegistrationId.HasValue) return;
+        try
+        {
+            _isRegistering = true;
+            _errorMessage = string.Empty;
+
+            await RegistrationService.CancelRegistrationAsync(_myRegistrationId.Value, "Cancelled by participant");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Cancel failed: {ex.Message}";
+        }
+        finally
+        {
+            _isRegistering = false;
+        }
+    }
+
+    private async Task CancelRegistration(int registrationId)
+    {
+        if (!AuthState.IsAdmin) return;
+        try
+        {
+            _errorMessage = string.Empty;
+            await RegistrationService.CancelRegistrationAsync(registrationId, "Cancelled by admin");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Cancel failed: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnAuthStateChanged -= AuthChanged;
+    }
+}
