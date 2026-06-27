@@ -22,15 +22,21 @@ namespace CommunityEventManagement.Infrastructure.Repositories
 
         public async Task<IEnumerable<EventActivity>> GetAllAsync()
         {
+            return await _context.EventActivities.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<EventActivity>> GetByEventAsync(int eventId)
+        {
             return await _context.EventActivities
+                .Include(ea => ea.Activity)
+                .Where(ea => ea.EventId == eventId)
                 .AsNoTracking()
                 .ToListAsync();
         }
 
         public async Task AddAsync(EventActivity entity)
         {
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
             await _context.EventActivities.AddAsync(entity);
         }
 

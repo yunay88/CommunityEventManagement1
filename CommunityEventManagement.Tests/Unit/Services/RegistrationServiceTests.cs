@@ -4,6 +4,7 @@ using CommunityEventManagement.Domain.Exceptions;
 using CommunityEventManagement.Infrastructure;
 using CommunityEventManagement.Infrastructure.Data;
 using CommunityEventManagement.Infrastructure.Services;
+using CommunityEventManagement.Infrastructure.Patterns.Observer; // <-- ADDED THIS
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -22,14 +23,16 @@ public class RegistrationServiceTests : IDisposable
 
     public RegistrationServiceTests()
     {
-  var options = TestDbContextFactory.CreateOptions($"RegTest_{Guid.NewGuid()}");
+        var options = TestDbContextFactory.CreateOptions($"RegTest_{Guid.NewGuid()}");
         _context = new ApplicationDbContext(options);
         _unitOfWork = new UnitOfWork(_context);
-        _sut = new RegistrationService(_unitOfWork, NullLogger<RegistrationService>.Instance);
+        
+        // 
+        var notifier = new RegistrationNotifier(NullLogger<RegistrationNotifier>.Instance); 
+        _sut = new RegistrationService(_unitOfWork, NullLogger<RegistrationService>.Instance, notifier);
 
         SeedData();
     }
-
     private void SeedData()
     {
         var venue = new Venue("Test Hall", "1 St", "City", 100);

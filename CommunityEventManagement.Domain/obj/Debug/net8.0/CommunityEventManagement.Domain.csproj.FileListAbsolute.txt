@@ -22,3 +22,4 @@
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Domain/obj/Debug/net8.0/refint/CommunityEventManagement.Domain.dll
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Domain/obj/Debug/net8.0/CommunityEventManagement.Domain.pdb
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Domain/obj/Debug/net8.0/ref/CommunityEventManagement.Domain.dll
+/Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Domain/obj/Debug/net8.0/CommunityEventManagement.Domain.sourcelink.json

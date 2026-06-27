@@ -33,3 +33,4 @@
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Infrastructure/obj/Debug/net8.0/CommunityEventManagement.Infrastructure.csproj.CopyComplete
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Infrastructure/obj/Debug/net8.0/CommunityEventManagement.Infrastructure.genruntimeconfig.cache
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Infrastructure/obj/Debug/net8.0/ref/CommunityEventManagement.Infrastructure.dll
+/Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Infrastructure/obj/Debug/net8.0/CommunityEventManagement.Infrastructure.sourcelink.json

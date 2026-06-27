@@ -9,212 +9,229 @@
 
 <PageTitle>@(_event?.Name ?? "Event Detail")</PageTitle>
 
-<div class="container py-4">
-    @* ── ALWAYS-VISIBLE ERROR BANNER (so we can see what's broken) ── *@
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <nav aria-label="breadcrumb" class="mb-1">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/events" class="text-decoration-none text-muted small fw-semibold">Events</a></li>
+                <li class="breadcrumb-item active small fw-bold" aria-current="page">@(_event?.Name ?? "Detail")</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold text-dark mb-0">@(_event?.Name ?? "Event Specification")</h1>
+    </div>
+    <div class="d-flex gap-2">
+        @if (AuthState.IsAdmin && _event != null)
+        {
+            <a href="/events/edit/@_event.Id" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">
+                <i class="bi bi-pencil me-2"></i> Edit event
+            </a>
+        }
+        <a href="/events" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Back to list
+        </a>
+    </div>
+</div>
+
+<div class="container pb-5">
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <div class="alert alert-danger">
-            <strong>Error:</strong> @_errorMessage
+        <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Error:</strong> @_errorMessage</div>
         </div>
     }
 
     @if (_isLoading)
     {
-        <p class="text-muted">Loading event details…</p>
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     }
     else if (_event == null)
     {
-        <div class="alert alert-warning">
-            <h4>Event not found</h4>
-            <p>The event you're looking for doesn't exist or has been removed.</p>
-            <a href="/events" class="btn btn-primary">Back to Events</a>
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-question-circle display-4 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold text-dark mb-2">Event not found</h4>
+            <p class="text-muted mb-4">The event you are looking for does not exist or has been removed.</p>
+            <a href="/events" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">Return to events</a>
         </div>
     }
     else
     {
-        @* ── PAGE HEADER ── *@
-        <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/events">Events</a></li>
-                        <li class="breadcrumb-item active">@_event.Name</li>
-                    </ol>
-                </nav>
-                <h1 class="fw-bold mb-1">@_event.Name</h1>
-                <span class="badge bg-@_event.StatusColour">@_event.StatusBadge</span>
-            </div>
-            <div class="d-flex gap-2">
-                @if (AuthState.IsAdmin)
-                {
-                    <a href="/events/edit/@_event.Id" class="btn btn-outline-secondary">Edit</a>
-                }
-                <a href="/events" class="btn btn-outline-secondary">Back</a>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            @* ── MAIN CONTENT ── *@
+        <div class="row g-5">
+            <!-- Main Content Grid -->
             <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header fw-bold">Details</div>
-                    <div class="card-body">
-                        @if (!string.IsNullOrWhiteSpace(_event.Description))
-                        {
-                            <p>@_event.Description</p>
-                            <hr />
-                        }
-                        <dl class="row mb-0">
-                            <dt class="col-sm-3">Start</dt>
-                            <dd class="col-sm-9">@_event.StartDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
-
-                            <dt class="col-sm-3">End</dt>
-                            <dd class="col-sm-9">@_event.EndDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
-
-                            <dt class="col-sm-3">Duration</dt>
-                            <dd class="col-sm-9">@_event.DurationFormatted</dd>
-
-                            @if (_event.Venues?.Any() == true)
-                            {
-                                <dt class="col-sm-3">Venue@((_event.Venues.Count > 1) ? "s" : "")</dt>
-                                <dd class="col-sm-9">
-                                    @foreach (var v in _event.Venues)
-                                    {
-                                        <div>
-                                            <strong>@v.Name</strong>
-                                            @if (v.IsPrimary) { <span class="badge bg-primary ms-2">Primary</span> }
-                                            <br />
-                                            <small class="text-muted">@v.Location</small>
-                                        </div>
-                                    }
-                                </dd>
-                            }
-                        </dl>
+                <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                        <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                            <i class="bi bi-info-square text-primary me-2"></i> Event Specification
+                        </h2>
+                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm">@_event.StatusBadge</span>
                     </div>
-                </div>
+                    @if (!string.IsNullOrWhiteSpace(_event.Description))
+                    {
+                        <p class="text-muted mb-4">@_event.Description</p>
+                    }
+                    <dl class="row mb-0 pt-3 border-top">
+                        <dt class="col-sm-3 text-muted fw-bold small mb-2 mb-sm-0 d-flex align-items-center">
+                            <i class="bi bi-calendar-event me-2 text-primary opacity-75"></i> Start Time
+                        </dt>
+                        <dd class="col-sm-9 text-dark mb-3 fw-semibold">@_event.StartDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
 
-                @* ── ACTIVITIES ── *@
-                @if (_event.Activities?.Any() == true)
-                {
-                    <div class="card mb-4">
-                        <div class="card-header fw-bold">Activities (@_event.Activities.Count)</div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                @foreach (var activity in _event.Activities)
+                        <dt class="col-sm-3 text-muted fw-bold small mb-2 mb-sm-0 d-flex align-items-center">
+                            <i class="bi bi-calendar-check me-2 text-primary opacity-75"></i> End Time
+                        </dt>
+                        <dd class="col-sm-9 text-dark mb-3 fw-semibold">@_event.EndDate.ToString("ddd dd MMM yyyy, HH:mm")</dd>
+
+                        <dt class="col-sm-3 text-muted fw-bold small mb-2 mb-sm-0 d-flex align-items-center">
+                            <i class="bi bi-stopwatch me-2 text-primary opacity-75"></i> Duration
+                        </dt>
+                        <dd class="col-sm-9 text-dark mb-4 fw-semibold">@_event.DurationFormatted</dd>
+
+                        @if (_event.Venues?.Any() == true)
+                        {
+                            <dt class="col-sm-3 text-muted fw-bold small mb-2 mb-sm-0 d-flex align-items-start">
+                                <i class="bi bi-geo-alt me-2 text-danger opacity-75 mt-1"></i> Venue@((_event.Venues.Count > 1) ? "s" : "")
+                            </dt>
+                            <dd class="col-sm-9 text-dark mb-0">
+                                @foreach (var v in _event.Venues)
                                 {
-                                    <div class="col-md-6">
-                                        <div class="border rounded p-2 d-flex align-items-center gap-2">
-                                            <span class="badge bg-secondary">@activity.TypeName</span>
-                                            <span>@activity.Name</span>
-                                            <small class="text-muted ms-auto">@activity.DurationFormatted</small>
-                                        </div>
+                                    <div class="mb-3 p-3 bg-light border rounded-3 shadow-sm">
+                                        <strong class="text-dark d-flex align-items-center">
+                                            @v.Name
+                                            @if (v.IsPrimary) { <span class="badge bg-primary px-2 py-1 rounded-pill ms-2 shadow-sm">Primary Venue</span> }
+                                        </strong>
+                                        <div class="text-muted small mt-1 fw-medium">@v.Location</div>
                                     </div>
                                 }
-                            </div>
+                            </dd>
+                        }
+                    </dl>
+                </div>
+
+                <!-- Activities Module -->
+                @if (_event.Activities?.Any() == true)
+                {
+                    <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+                        <h2 class="h5 fw-bold text-dark mb-4 pb-3 border-bottom d-flex align-items-center">
+                            <i class="bi bi-lightning-charge text-warning me-2"></i> Activities (@_event.Activities.Count)
+                        </h2>
+                        <div class="row g-3">
+                            @foreach (var activity in _event.Activities)
+                            {
+                                <div class="col-md-6">
+                                    <div class="border rounded-3 p-3 d-flex align-items-center justify-content-between bg-light shadow-sm">
+                                        <div>
+                                            <div class="fw-bold text-dark mb-1">@activity.Name</div>
+                                            <span class="badge bg-secondary px-2 py-1 rounded-pill shadow-sm">@activity.TypeName</span>
+                                        </div>
+                                        <span class="text-muted small fw-bold d-flex align-items-center">
+                                            <i class="bi bi-clock me-1 opacity-75"></i> @activity.DurationFormatted
+                                        </span>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
 
-                @* ── REGISTRATIONS (Admin only) ── *@
+                <!-- Registrations Table Console (Admin only) -->
                 @if (AuthState.IsAdmin && _event.Registrations?.Any() == true)
                 {
-                    <div class="card">
-                        <div class="card-header fw-bold">Registered Participants (@_event.Registrations.Count)</div>
-                        <div class="card-body p-0">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Participant</th>
-                                        <th>Email</th>
-                                        <th>Registered</th>
-                                        <th>Status</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var reg in _event.Registrations)
-                                    {
-                                        <tr>
-                                            <td>@reg.ParticipantName</td>
-                                            <td>@reg.ParticipantEmail</td>
-                                            <td>@reg.RegistrationDate.ToString("dd/MM/yyyy")</td>
-                                            <td>
-                                                <span class="badge bg-@reg.StatusColour">@reg.StatusName</span>
-                                            </td>
-                                            <td>
-                                                @if (reg.Status != Domain.Enums.RegistrationStatus.Cancelled)
-                                                {
-                                                    <button class="btn btn-sm btn-outline-danger"
-                                                            @onclick="() => CancelRegistration(reg.Id)">
-                                                        Cancel
-                                                    </button>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    <div class="modern-container card border-0 shadow-sm rounded-4 mb-5 bg-white overflow-hidden">
+                        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                            <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                                <i class="bi bi-people text-success me-2"></i> Registered Participants
+                            </h2>
+                            <span class="badge bg-secondary px-3 py-1 rounded-pill shadow-sm">@_event.Registrations.Count Total</span>
                         </div>
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Participant</th>
+                                    <th>Email</th>
+                                    <th>Registration Date</th>
+                                    <th>Status</th>
+                                    <th class="pe-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reg in _event.Registrations)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">@reg.ParticipantName</td>
+                                        <td class="text-muted">@reg.ParticipantEmail</td>
+                                        <td class="text-muted">@reg.RegistrationDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge bg-success px-2 py-1 rounded-pill shadow-sm">@reg.StatusName</span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            @if (reg.Status != Domain.Enums.RegistrationStatus.Cancelled)
+                                            {
+                                                <button class="btn btn-sm btn-outline-danger py-1 px-3 fw-bold shadow-sm"
+                                                        @onclick="() => CancelRegistration(reg.Id)">
+                                                    Cancel
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 }
             </div>
 
-            @* ── REGISTRATION SIDEBAR ── *@
+            <!-- Registration Action Sidebar -->
             <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header fw-bold bg-success text-white">
-                        Register for this Event
-                    </div>
-                    <div class="card-body">
-                        @if (!AuthState.IsAuthenticated)
-                        {
-                            <p class="text-muted small mb-2">Please sign in to register.</p>
-                            <a href="/login?returnUrl=/events/@Id" class="btn btn-primary w-100">
-                                Sign in to Register
-                            </a>
-                        }
-                        else if (AuthState.IsAdmin)
-                        {
-                            <p class="text-muted small mb-0">
-                                As an admin, you manage registrations from the table on the left.
+                <div class="modern-container card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem;">
+                    <h2 class="h5 fw-bold text-dark mb-4 pb-3 border-bottom d-flex align-items-center">
+                        <i class="bi bi-shield-check text-primary me-2"></i> Registration Console
+                    </h2>
+                    @if (!AuthState.IsAuthenticated)
+                    {
+                        <p class="text-muted small mb-4 fw-medium">Sign in to your participant account to secure your place at this event.</p>
+                        <a href="/login?returnUrl=/events/@Id" class="btn btn-primary w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Sign in to register
+                        </a>
+                    }
+                    else if (AuthState.IsAdmin)
+                    {
+                        <div class="p-3 bg-light border rounded-3 mb-0 shadow-sm">
+                            <p class="text-muted small mb-0 d-flex align-items-center fw-medium">
+                                <i class="bi bi-info-circle text-primary me-2 fs-5"></i>
+                                As an administrator, you manage participant registrations directly from the table console.
                             </p>
-                        }
-                        else if (_isRegistered)
-                        {
-                            <div class="alert alert-success mb-2">
-                                You are registered for this event.
-                            </div>
-                            <button class="btn btn-outline-danger w-100"
-                                    @onclick="CancelMyRegistration"
-                                    disabled="@_isRegistering">
-                                @if (_isRegistering)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Cancel My Registration
-                            </button>
-                        }
-                        else
-                        {
-                            <p class="small text-muted mb-2">
-                                Registering as:<br />
-                                <strong>@AuthState.CurrentUser.FullName</strong><br />
-                                @AuthState.CurrentUser.Email
-                            </p>
-                            <button class="btn btn-success w-100"
-                                    @onclick="RegisterMe"
-                                    disabled="@_isRegistering">
-                                @if (_isRegistering)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Register Now
-                            </button>
-                        }
-                        <hr />
-                        <div class="small text-muted">
-                            @_event.ParticipantCount participant(s) registered
                         </div>
+                    }
+                    else if (_isRegistered)
+                    {
+                        <div class="p-3 bg-success-subtle text-success border border-success-subtle rounded-3 fw-bold small mb-4 d-flex align-items-center shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i> You are actively registered for this event.
+                        </div>
+                        <button class="btn btn-outline-danger w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
+                                @onclick="CancelMyRegistration"
+                                disabled="@_isRegistering">
+                            @if (_isRegistering) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                            <i class="bi bi-x-lg me-2"></i> Cancel registration
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="mb-4 p-3 bg-light border rounded-3 shadow-sm">
+                            <div class="text-muted small mb-1 fw-bold">Registering Account</div>
+                            <div class="fw-bold text-dark fs-6">@AuthState.CurrentUser.FullName</div>
+                            <div class="text-muted small fw-medium">@AuthState.CurrentUser.Email</div>
+                        </div>
+                        <button class="btn btn-primary w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
+                                @onclick="RegisterMe"
+                                disabled="@_isRegistering">
+                            @if (_isRegistering) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                            <i class="bi bi-check2-square me-2 fs-5"></i> Confirm registration
+                        </button>
+                    }
+                    <div class="pt-4 mt-4 border-top text-muted small text-center d-flex align-items-center justify-content-center fw-bold">
+                        <i class="bi bi-people me-2 text-primary opacity-75"></i> @_event.ParticipantCount participant(s) currently confirmed
                     </div>
                 </div>
             </div>

@@ -262,3 +262,4 @@
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Web/obj/Debug/net8.0/CommunityEventManagement.Web.csproj.CopyComplete
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Web/obj/Debug/net8.0/CommunityEventManagement.Web.genruntimeconfig.cache
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Web/obj/Debug/net8.0/ref/CommunityEventManagement.Web.dll
+/Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Web/obj/Debug/net8.0/CommunityEventManagement.Web.sourcelink.json

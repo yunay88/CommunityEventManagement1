@@ -1,5 +1,4 @@
 @page "/register"
-
 @using CommunityEventManagement.Web.Services
 @using System.ComponentModel.DataAnnotations
 @inject AuthStateService AuthState
@@ -7,84 +6,79 @@
 
 <PageTitle>Create Account — Community Events</PageTitle>
 
-<div class="container py-5">
+<div class="container py-5 my-5">
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white text-center py-3">
-                    <h4 class="mb-0 fw-bold">Create Account</h4>
-                    <small class="text-muted">Sign up to register for community events</small>
+            <div class="modern-card p-5">
+                <div class="text-center mb-5">
+                    <i class="bi bi-layers-fill text-primary display-4 mb-3 d-block"></i>
+                    <h2 class="fw-bold text-dark mb-1">Create Account</h2>
+                    <p class="text-muted small mb-0">Sign up to register and participate in community events</p>
                 </div>
-                <div class="card-body p-4">
 
-                    @if (!string.IsNullOrEmpty(_errorMessage))
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            @_errorMessage
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger mb-4" role="alert">
+                        @_errorMessage
+                    </div>
+                }
+
+                <EditForm Model="@_model" OnValidSubmit="HandleRegisterAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input @bind="_model.FirstName" class="form-control py-2" placeholder="First name" />
+                            <ValidationMessage For="@(() => _model.FirstName)" class="text-danger small" />
                         </div>
-                    }
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input @bind="_model.LastName" class="form-control py-2" placeholder="Last name" />
+                            <ValidationMessage For="@(() => _model.LastName)" class="text-danger small" />
+                        </div>
+                    </div>
 
-                    <EditForm Model="@_model" OnValidSubmit="HandleRegisterAsync">
-    <DataAnnotationsValidator />
+                    <div class="mb-4">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" @bind="_model.Email" class="form-control py-2" placeholder="you@example.com" />
+                        <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                    </div>
 
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">
-                First Name <span class="text-danger">*</span>
-            </label>
-            <input @bind="_model.FirstName" class="form-control" placeholder="First name" />
-            <ValidationMessage For="@(() => _model.FirstName)" class="text-danger small" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">
-                Last Name <span class="text-danger">*</span>
-            </label>
-            <input @bind="_model.LastName" class="form-control" placeholder="Last name" />
-            <ValidationMessage For="@(() => _model.LastName)" class="text-danger small" />
-        </div>
-    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" @bind="_model.PhoneNumber" class="form-control py-2" placeholder="07700 000000" />
+                        <ValidationMessage For="@(() => _model.PhoneNumber)" class="text-danger small" />
+                    </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
-        <input type="email" @bind="_model.Email" class="form-control" placeholder="you@example.com" />
-        <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
-    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" @bind="_model.Password" class="form-control py-2" placeholder="At least 6 characters" />
+                        <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
+                    </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Phone Number</label>
-        <input type="tel" @bind="_model.PhoneNumber" class="form-control" placeholder="07700 000000" />
-        <ValidationMessage For="@(() => _model.PhoneNumber)" class="text-danger small" />
-    </div>
+                    <div class="mb-5">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" @bind="_model.ConfirmPassword" class="form-control py-2" placeholder="Re-enter password" />
+                        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="text-danger small" />
+                    </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
-        <input type="password" @bind="_model.Password" class="form-control" placeholder="At least 6 characters" />
-        <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
-    </div>
+                    <button type="submit" class="btn-modern-primary w-100 py-3 mb-4" disabled="@_isSubmitting">
+                        @if (_isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Creating account...</span>
+                        }
+                        else
+                        {
+                            <span>Create Account</span>
+                        }
+                    </button>
+                </EditForm>
 
-    <div class="mb-4">
-        <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
-        <input type="password" @bind="_model.ConfirmPassword" class="form-control" />
-        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="text-danger small" />
-    </div>
-
-    <button type="submit" class="btn btn-primary w-100" disabled="@_isSubmitting">
-        @if (_isSubmitting)
-        {
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            <span>Creating account...</span>
-        }
-        else
-        {
-            <span>Create Account</span>
-        }
-    </button>
-</EditForm>
-                </div>
-                <div class="card-footer text-center bg-white py-3">
+                <div class="text-center border-top pt-4">
                     <small class="text-muted">
-                        Already have an account?
-                        <a href="/login" class="fw-semibold">Sign in</a>
+                        Already have an account? <a href="/login" class="text-primary fw-semibold text-decoration-none">Sign in</a>
                     </small>
                 </div>
             </div>
@@ -127,10 +121,6 @@
         }
     }
 
-    /// <summary>
-    /// Local form model — kept here to avoid touching the ViewModels folder.
-    /// Validation runs via DataAnnotations on this class.
-    /// </summary>
     private class RegisterFormModel
     {
         [Required(ErrorMessage = "First name is required")]
@@ -149,8 +139,7 @@
         public string? PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
-        [StringLength(100, MinimumLength = 6,
-            ErrorMessage = "Password must be at least 6 characters")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 

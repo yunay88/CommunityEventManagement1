@@ -5,64 +5,61 @@
 
 <PageTitle>Sign In — Community Events</PageTitle>
 
-<div class="container py-5">
+<div class="container py-5 my-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white text-center py-3">
-                    <h4 class="mb-0 fw-bold">Sign In</h4>
-                    <small class="text-muted">Community Event Management System</small>
+            <div class="modern-card p-5">
+                <div class="text-center mb-5">
+                    <i class="bi bi-layers-fill text-primary display-4 mb-3 d-block"></i>
+                    <h2 class="fw-bold text-dark mb-1">Sign In</h2>
+                    <p class="text-muted small mb-0">Community Event Management Portal</p>
                 </div>
-                <div class="card-body p-4">
 
-                    @if (!string.IsNullOrEmpty(_successMessage))
-                    {
-                        <div class="alert alert-success" role="alert">
-                            @_successMessage
-                        </div>
-                    }
+                @if (!string.IsNullOrEmpty(_successMessage))
+                {
+                    <div class="alert alert-success mb-4" role="alert">
+                        @_successMessage
+                    </div>
+                }
 
-                    @if (!string.IsNullOrEmpty(_errorMessage))
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            @_errorMessage
-                        </div>
-                    }
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger mb-4" role="alert">
+                        @_errorMessage
+                    </div>
+                }
 
-                    <EditForm Model="@_model" OnValidSubmit="HandleLoginAsync">
-                        <DataAnnotationsValidator />
+                <EditForm Model="@_model" OnValidSubmit="HandleLoginAsync">
+                    <DataAnnotationsValidator />
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Email Address</label>
-                            <input type="email" @bind="_model.Email" class="form-control form-control-lg"
-                                   placeholder="you@example.com" />
-                            <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" @bind="_model.Email" class="form-control py-2" placeholder="you@example.com" />
+                        <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Password</label>
-                            <input type="password" @bind="_model.Password" class="form-control form-control-lg"
-                                   placeholder="Enter your password" />
-                            <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
-                        </div>
+                    <div class="mb-5">
+                        <label class="form-label">Password</label>
+                        <input type="password" @bind="_model.Password" class="form-control py-2" placeholder="Enter your password" />
+                        <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
+                    </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@_isProcessing">
-                            @if (_isProcessing)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                <span>Signing in...</span>
-                            }
-                            else
-                            {
-                                <span>Sign In</span>
-                            }
-                        </button>
-                    </EditForm>
-                </div>
-                <div class="card-footer text-center bg-white py-3">
+                    <button type="submit" class="btn-modern-primary w-100 py-3 mb-4" disabled="@_isProcessing">
+                        @if (_isProcessing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Signing in...</span>
+                        }
+                        else
+                        {
+                            <span>Sign In</span>
+                        }
+                    </button>
+                </EditForm>
+
+                <div class="text-center border-top pt-4">
                     <small class="text-muted">
-                        Don't have an account?
-                        <a href="/register" class="fw-semibold">Create one</a>
+                        Don't have an account? <a href="/register" class="text-primary fw-semibold text-decoration-none">Create one</a>
                     </small>
                 </div>
             </div>
@@ -78,7 +75,6 @@
 
     protected override void OnInitialized()
     {
-        // Auto-fill if just registered
         var uri = Navigation.Uri;
         if (uri.Contains("registered=true"))
         {

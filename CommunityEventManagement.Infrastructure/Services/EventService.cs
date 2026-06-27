@@ -181,7 +181,7 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
         }
 
-        public async Task<Event> CreateEventWithVenuesAsync(
+                public async Task<Event> CreateEventWithVenuesAsync(
             string name,
             string description,
             DateTime startDate,
@@ -229,8 +229,9 @@ namespace CommunityEventManagement.Infrastructure.Services
                         });
                     }
 
-                    // Add EventActivity rows for each selected activity
-                    foreach (var activityId in activityIds ?? new List<int>())
+                    // Add EventActivity rows (Fixes CS8602 Null Dereference Warning)
+                    var safeActivityIds = activityIds ?? new List<int>();
+                    foreach (var activityId in safeActivityIds)
                     {
                         if (await _unitOfWork.Activities.ExistsAsync(activityId))
                         {
@@ -238,7 +239,7 @@ namespace CommunityEventManagement.Infrastructure.Services
                             {
                                 EventId = eventEntity.Id,
                                 ActivityId = activityId,
-                                OrderInEvent = activityIds.IndexOf(activityId) + 1,
+                                OrderInEvent = safeActivityIds.IndexOf(activityId) + 1,
                                 AddedAt = DateTime.UtcNow
                             });
                         }
@@ -295,12 +296,12 @@ namespace CommunityEventManagement.Infrastructure.Services
                     eventEntity.UpdateDetails(name, description, startDate, endDate, null);
                     await _unitOfWork.Events.UpdateAsync(eventEntity);
 
-                    // Replace EventVenue links — delete old, add new
-                    var existingLinks = await _context.EventVenues
-                        .Where(ev => ev.EventId == id)
-                        .ToListAsync();
+                    // Replace EventVenue links (Fixes CS0103 _context error using existing GetByEventAsync)
+                    var existingLinks = await _unitOfWork.EventVenues.GetByEventAsync(id);
                     foreach (var link in existingLinks)
-                        _context.EventVenues.Remove(link);
+                    {
+                        await _unitOfWork.EventVenues.RemoveLinkAsync(link.EventId, link.VenueId);
+                    }
 
                     for (int i = 0; i < venueIds.Count; i++)
                     {
@@ -313,14 +314,17 @@ namespace CommunityEventManagement.Infrastructure.Services
                         });
                     }
 
-                    // Replace EventActivity links
-                    var existingActivities = await _context.EventActivities
-                        .Where(ea => ea.EventId == id)
-                        .ToListAsync();
+                    // Replace EventActivity links (Fixes CS0103 _context error using existing GetAllAsync)
+                    var allActivities = await _unitOfWork.EventActivities.GetAllAsync();
+                    var existingActivities = allActivities.Where(ea => ea.EventId == id).ToList();
                     foreach (var act in existingActivities)
-                        _context.EventActivities.Remove(act);
+                    {
+                        await _unitOfWork.EventActivities.RemoveLinkAsync(act.EventId, act.ActivityId);
+                    }
 
-                    foreach (var activityId in activityIds ?? new List<int>())
+                    // Add new EventActivity links (Fixes CS8602 Null Dereference Warning)
+                    var safeActivityIdsUpdate = activityIds ?? new List<int>();
+                    foreach (var activityId in safeActivityIdsUpdate)
                     {
                         if (await _unitOfWork.Activities.ExistsAsync(activityId))
                         {
@@ -328,7 +332,7 @@ namespace CommunityEventManagement.Infrastructure.Services
                             {
                                 EventId = id,
                                 ActivityId = activityId,
-                                OrderInEvent = (activityIds.IndexOf(activityId) + 1),
+                                OrderInEvent = (safeActivityIdsUpdate.IndexOf(activityId) + 1),
                                 AddedAt = DateTime.UtcNow
                             });
                         }
@@ -354,6 +358,9 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
             finally { _logger.LogDebug("UpdateEventWithVenuesAsync completed for {EventId}", id); }
         }
+
+
+
 
         public async Task UpdateEventAsync(
             int id,
