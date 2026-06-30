@@ -7,11 +7,12 @@ namespace CommunityEventManagement.Domain.Entities
     public class Notification
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public int? ParticipantId { get; set; } // If null, it's a broadcast to ALL participants!
+        public int? ParticipantId { get; set; } // If null, it's a broadcast to ALL participants
         public int? EventId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty; // EventCreated, EventUpdated, EventApproaching, RegistrationConfirmed, WaitlistPromoted
+        public bool ForAdminOnly { get; set; } = false; // <-- TARGETS ALERTS EXCLUSIVELY TO ADMINISTRATORS
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
 

@@ -13,7 +13,7 @@
 <div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
     <div>
         <h1 class="h3 fw-bold text-dark mb-1">Notifications Console</h1>
-        <p class="text-muted small mb-0">Real-time alerts for new events, schedule changes, and registration confirmations.</p>
+        <p class="text-muted small mb-0">Real-time alerts for new events, schedule changes, waitlist management, and registration confirmations.</p>
     </div>
     @if (AuthState.IsAuthenticated && _notifications.Any(n => !n.IsRead))
     {
@@ -26,7 +26,7 @@
 <div class="container pb-5">
     @if (!AuthState.IsAuthenticated)
     {
-        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-5">
             <i class="bi bi-shield-lock display-4 text-muted mb-3 d-block"></i>
             <h4 class="fw-bold text-dark mb-1">Authentication Required</h4>
             <p class="text-muted mb-4">Please sign in to view your personalized activity notifications.</p>
@@ -66,13 +66,23 @@
                                         {
                                             <span class="badge bg-primary px-2 py-0 rounded-pill small">New</span>
                                         }
+                                        @if (notif.ForAdminOnly)
+                                        {
+                                            <span class="badge bg-warning text-dark px-2 py-0 rounded-pill small">Admin Alert</span>
+                                        }
                                     </div>
                                     <p class="text-muted small mb-2 fw-medium">@notif.Message</p>
                                     <span class="text-muted small fw-semibold"><i class="bi bi-clock me-1 opacity-75"></i> @notif.GetTimeAgo()</span>
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
-                                @if (notif.EventId.HasValue)
+                                @if (notif.ForAdminOnly)
+                                {
+                                    <a href="/registrations" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm" @onclick="() => MarkReadAsync(notif.Id)">
+                                        View Table Console
+                                    </a>
+                                }
+                                else if (notif.EventId.HasValue)
                                 {
                                     <a href="/events/@notif.EventId.Value" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm" @onclick="() => MarkReadAsync(notif.Id)">
                                         View Event
@@ -109,33 +119,50 @@
 
     private async Task LoadNotificationsAsync()
     {
-        if (AuthState.IsAuthenticated && AuthState.UserId.HasValue)
+        if (AuthState.IsAuthenticated)
         {
             _isLoading = true;
-            
-            // Trigger automatic check for approaching events
             var upcoming = await EventService.GetUpcomingEventsAsync();
             await NotificationService.CheckApproachingEventsAsync(upcoming);
 
-            var data = await NotificationService.GetNotificationsForParticipantAsync(AuthState.UserId.Value);
-            _notifications = data.ToList();
+            if (AuthState.IsAdmin)
+            {
+                var data = await NotificationService.GetAdminNotificationsAsync();
+                _notifications = data.ToList();
+            }
+            else if (AuthState.UserId.HasValue)
+            {
+                var data = await NotificationService.GetNotificationsForParticipantAsync(AuthState.UserId.Value);
+                _notifications = data.ToList();
+            }
             _isLoading = false;
         }
     }
 
     private async Task MarkReadAsync(string id)
     {
-        await NotificationService.MarkAsReadAsync(id);
+        if (AuthState.IsAdmin)
+        {
+            await NotificationService.MarkAdminAsReadAsync(id);
+        }
+        else
+        {
+            await NotificationService.MarkAsReadAsync(id);
+        }
         await LoadNotificationsAsync();
     }
 
     private async Task MarkAllReadAsync()
     {
-        if (AuthState.UserId.HasValue)
+        if (AuthState.IsAdmin)
+        {
+            await NotificationService.MarkAllAdminAsReadAsync();
+        }
+        else if (AuthState.UserId.HasValue)
         {
             await NotificationService.MarkAllAsReadAsync(AuthState.UserId.Value);
-            await LoadNotificationsAsync();
         }
+        await LoadNotificationsAsync();
     }
 
     public void Dispose()

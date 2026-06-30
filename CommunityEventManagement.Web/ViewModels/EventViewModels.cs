@@ -37,7 +37,8 @@ namespace CommunityEventManagement.Web.ViewModels
                     Location = ev.Venue.GetLocation() ?? "",
                     City = ev.Venue.City ?? "",
                     IsPrimary = ev.IsPrimary,
-                    Capacity = ev.Venue.MaxCapacity
+                    Capacity = ev.Venue.MaxCapacity,
+                    CurrentCapacity = ev.Venue.CurrentCapacity
                 }).ToList();
 
             var primary = eventVenues.FirstOrDefault(ev => ev.IsPrimary)?.Venue;
@@ -87,6 +88,8 @@ namespace CommunityEventManagement.Web.ViewModels
         public string City { get; set; } = string.Empty;
         public bool IsPrimary { get; set; }
         public int Capacity { get; set; }
+
+        public int CurrentCapacity { get; set; }
     }
 
     public class CreateEventModel : IValidatableObject
@@ -231,7 +234,8 @@ namespace CommunityEventManagement.Web.ViewModels
                     Location = ev.Venue.GetLocation() ?? "",
                     City = ev.Venue.City ?? "",
                     IsPrimary = ev.IsPrimary,
-                    Capacity = ev.Venue.MaxCapacity
+                    Capacity = ev.Venue.MaxCapacity,
+                     CurrentCapacity = ev.Venue.CurrentCapacity
                 }).ToList();
 
             var primary = eventVenues.FirstOrDefault(ev => ev.IsPrimary)?.Venue;

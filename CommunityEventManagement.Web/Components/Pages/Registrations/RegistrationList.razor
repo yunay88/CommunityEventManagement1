@@ -1,104 +1,137 @@
 @page "/registrations"
 @page "/registrations/my"
+@using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Domain.Enums
 @inject IRegistrationService RegistrationService
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<PageTitle>@(AuthState.IsParticipant ? "My Registrations" : "All Registrations")</PageTitle>
+<PageTitle>@(AuthState.IsParticipant ? "My Registrations — Community Events" : "Registration Console — Community Events")</PageTitle>
 
-<div class="container py-4">
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">
+            @(AuthState.IsParticipant ? "My Registrations" : "Registration Console")
+        </h1>
+        <p class="text-muted small mb-0">
+            @(AuthState.IsParticipant 
+                ? "Review your confirmed seats, track waitlist queuing, and manage cancellations." 
+                : "System-wide tracking of event reservations, waitlist promotion workflows, and participant statuses.")
+        </p>
+    </div>
+    <span class="badge bg-secondary px-3 py-2 rounded-pill shadow-sm fs-6">
+        @_registrations.Count total reservation(s)
+    </span>
+</div>
+
+<div class="container pb-5">
     @if (!string.IsNullOrEmpty(_success))
     {
-        <div class="alert alert-success alert-dismissible fade show">
-            @_success
-            <button type="button" class="btn-close" @onclick="() => _success = string.Empty"></button>
+        <div class="alert alert-success mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div><strong>Success:</strong> @_success</div>
         </div>
     }
     @if (!string.IsNullOrEmpty(_error))
     {
-        <div class="alert alert-danger alert-dismissible fade show">
-            @_error
-            <button type="button" class="btn-close" @onclick="() => _error = string.Empty"></button>
+        <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Error:</strong> @_error</div>
         </div>
     }
 
     @if (!AuthState.IsAuthenticated)
     {
-        <div class="alert alert-warning">
-            Please <a href="/login">sign in</a> to view registrations.
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-5">
+            <i class="bi bi-shield-lock display-4 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold text-dark mb-1">Authentication Required</h4>
+            <p class="text-muted mb-4">Please sign in to view your active event registrations and waitlist queue status.</p>
+            <a href="/login?returnUrl=/registrations" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">Sign in</a>
+        </div>
+    }
+    else if (_isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else if (!_registrations.Any())
+    {
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-card-checklist display-4 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold text-dark mb-1">No registrations found</h4>
+            <p class="text-muted mb-4">You do not have any active event registrations or waitlist reservations.</p>
+            <a href="/events" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">Browse Events</a>
         </div>
     }
     else
     {
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="fw-bold mb-0">
-                @if (AuthState.IsParticipant)
+        <div class="modern-container card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-5">
+            <div class="p-4 border-bottom bg-slate-50 d-flex justify-content-between align-items-center">
+                <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                    <i class="bi bi-ticket-detailed text-primary me-2"></i> Registration Table Console
+                </h2>
+                @if (AuthState.IsAdmin && _registrations.Any(r => r.Status == RegistrationStatus.Waitlisted))
                 {
-                    <span>My Registrations</span>
+                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill shadow-sm fw-bold">
+                        <i class="bi bi-clock-history me-1"></i> Waitlist Action Required
+                    </span>
                 }
-                else
-                {
-                    <span>All Registrations</span>
-                }
-            </h2>
-            <span class="text-muted small">@_registrations.Count registration(s)</span>
-        </div>
-
-        @if (_isLoading)
-        {
-            <p class="text-muted">Loading…</p>
-        }
-        else if (!_registrations.Any())
-        {
-            <div class="text-center text-muted py-5">
-                <p>No registrations yet.</p>
-                <a href="/events" class="btn btn-primary">Browse Events</a>
             </div>
-        }
-        else
-        {
-            <div class="card">
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Event</th>
-                                <th>Event Date</th>
-                                <th>Registered</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var r in _registrations)
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Event</th>
+                        <th>Event Date</th>
+                        @if (AuthState.IsAdmin)
+                        {
+                            <th>Participant</th>
+                            <th>Email</th>
+                        }
+                        <th>Registered</th>
+                        <th>Status</th>
+                        <th class="pe-4 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in _registrations)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">
+                                <a href="/events/@r.EventId" class="text-primary text-decoration-none">@r.EventName</a>
+                            </td>
+                            <td class="text-muted fw-medium">@r.EventStartDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            @if (AuthState.IsAdmin)
                             {
-                                <tr>
-                                    <td>
-                                        <a href="/events/@r.EventId">@r.EventName</a>
-                                    </td>
-                                    <td>@r.EventStartDate.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td>@r.RegistrationDate.ToString("dd/MM/yyyy")</td>
-                                    <td>
-                                        <span class="badge bg-@r.StatusColour">@r.StatusName</span>
-                                    </td>
-                                    <td class="text-end">
-                                        @if (r.Status != Domain.Enums.RegistrationStatus.Cancelled
-                                            && CanCancel(r))
-                                        {
-                                            <button class="btn btn-sm btn-outline-danger"
-                                                    @onclick="() => Cancel(r.Id)">
-                                                Cancel
-                                            </button>
-                                        }
-                                    </td>
-                                </tr>
+                                <td class="fw-bold text-dark">@r.ParticipantName</td>
+                                <td class="text-muted">@r.ParticipantEmail</td>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
+                            <td class="text-muted">@r.RegistrationDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <span class="badge @(r.Status == RegistrationStatus.Confirmed ? "bg-success" : r.Status == RegistrationStatus.Waitlisted ? "bg-info" : "bg-danger") px-3 py-1 rounded-pill shadow-sm">@r.StatusName</span>
+                            </td>
+                            <td class="pe-4 text-end">
+                                @if (AuthState.IsAdmin && r.Status == RegistrationStatus.Waitlisted)
+                                {
+                                    <button class="btn btn-sm btn-success py-1 px-3 fw-bold shadow-sm me-2"
+                                            @onclick="() => ApproveAsync(r.Id)">
+                                        <i class="bi bi-check-lg me-1"></i> Approve
+                                    </button>
+                                }
+                                @if (r.Status != RegistrationStatus.Cancelled && CanCancel(r))
+                                {
+                                    <button class="btn btn-sm btn-outline-danger py-1 px-3 fw-bold shadow-sm"
+                                            @onclick="() => CancelAsync(r.Id)">
+                                        Cancel
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>
 
@@ -111,20 +144,18 @@
     protected override async Task OnInitializedAsync()
     {
         AuthState.OnAuthStateChanged += AuthChanged;
-        await Load();
+        await LoadAsync();
     }
 
-    private async void AuthChanged() => await InvokeAsync(async () => await Load());
+    private async void AuthChanged() => await InvokeAsync(async () => await LoadAsync());
 
     private bool CanCancel(RegistrationViewModel r)
     {
         if (AuthState.IsAdmin) return true;
-        // Participant can only cancel their own
-        return AuthState.IsAuthenticated
-            && r.ParticipantEmail == AuthState.CurrentUser.Email;
+        return AuthState.IsAuthenticated && r.ParticipantEmail == AuthState.CurrentUser.Email;
     }
 
-    private async Task Load()
+    private async Task LoadAsync()
     {
         try
         {
@@ -142,7 +173,6 @@
             }
             else if (AuthState.IsParticipant && AuthState.UserId.HasValue)
             {
-                // Participants only see their own registrations
                 _registrations = (await RegistrationService
                     .GetRegistrationsByParticipantAsync(AuthState.UserId.Value))
                     .Select(RegistrationViewModel.FromEntity).ToList();
@@ -155,18 +185,37 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 
-    private async Task Cancel(int id)
+    private async Task ApproveAsync(int id)
+    {
+        if (!AuthState.IsAdmin) return;
+        try
+        {
+            _error = string.Empty;
+            _success = string.Empty;
+            await RegistrationService.ConfirmRegistrationAsync(id);
+            _success = "Participant successfully promoted from waitlist to confirmed status!";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Approval failed: {ex.Message}";
+        }
+    }
+
+    private async Task CancelAsync(int id)
     {
         try
         {
             _error = string.Empty;
+            _success = string.Empty;
             var reason = AuthState.IsAdmin ? "Cancelled by admin" : "Cancelled by participant";
             await RegistrationService.CancelRegistrationAsync(id, reason);
-            _success = "Registration cancelled.";
-            await Load();
+            _success = "Registration cancelled successfully.";
+            await LoadAsync();
         }
         catch (Exception ex)
         {

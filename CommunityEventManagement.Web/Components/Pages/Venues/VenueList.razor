@@ -9,7 +9,7 @@
 <div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
     <div>
         <h1 class="h3 fw-bold text-dark mb-1">Venues Console</h1>
-        <p class="text-muted small mb-0">Partnered event locations, physical capacity allocations, and resource management.</p>
+        <p class="text-muted small mb-0">Partnered event locations, structural seating thresholds, and schedule hosting management.</p>
     </div>
     @if (AuthState.IsAdmin)
     {
@@ -47,8 +47,8 @@
                             <span class="badge bg-light text-secondary border px-3 py-1 rounded-pill shadow-sm">
                                 <i class="bi bi-building me-1"></i> Venue
                             </span>
-                            <span class="text-muted small fw-bold">
-                                @(venue.CurrentCapacity == 0 ? "Full Capacity" : "Available")
+                            <span class="badge bg-success px-3 py-1 rounded-pill shadow-sm">
+                                Active Partner
                             </span>
                         </div>
 
@@ -57,22 +57,16 @@
                             <i class="bi bi-geo-alt text-danger me-1"></i> @venue.Location
                         </p>
 
-                        <!-- Capacity Bar & Direct Number Console -->
+                        <!-- Enterprise Venue Specifications Console -->
                         <div class="border-top pt-3 mt-auto">
                             <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted small fw-bold">Available Seats</span>
-                                <strong class="text-dark fw-bold small">@venue.CurrentCapacity / @venue.MaxCapacity</strong>
+                                <span class="text-muted small fw-bold">Max Seating Capacity</span>
+                                <strong class="text-dark fw-bold small">@venue.MaxCapacity seats</strong>
                             </div>
-                            <div class="progress mb-2 bg-slate-100 shadow-sm" style="height: 8px; border-radius: 999px;">
-                                <div class="progress-bar bg-@(venue.OccupancyRate > 85 ? "danger" : venue.OccupancyRate > 50 ? "warning" : "success")"
-                                     style="width: @venue.OccupancyRate%">
-                                </div>
+                            <div class="d-flex justify-content-between mb-4">
+                                <span class="text-muted small fw-bold">Active Scheduled Events</span>
+                                <strong class="text-primary fw-bold small">@venue.EventCount event(s)</strong>
                             </div>
-                            
-                            <!-- THE DIRECT NUMERICAL DISPLAY -->
-                            <small class="text-muted fw-bold d-block mb-4">
-                                @venue.CurrentCapacity available out of @venue.MaxCapacity
-                            </small>
 
                             @if (AuthState.IsAdmin)
                             {

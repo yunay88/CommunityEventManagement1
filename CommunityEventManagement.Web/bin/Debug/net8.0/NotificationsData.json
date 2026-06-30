@@ -6,6 +6,7 @@
     "Title": "Welcome to Community Events",
     "Message": "Explore upcoming events, secure your place, and receive real-time schedule updates.",
     "Type": "EventCreated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T09:59:52.054603Z",
     "IsRead": true
   },
@@ -16,6 +17,7 @@
     "Title": "Event Approaching",
     "Message": "Reminder: \u0027Online Learning Workshop\u0027 is starting on 01 Jul 2026, 23:05. Don\u0027t miss it!",
     "Type": "EventApproaching",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:06:47.418824Z",
     "IsRead": true
   },
@@ -26,6 +28,7 @@
     "Title": "Registration Cancelled",
     "Message": "Your registration for \u0027Art and Culture Week\u0027 has been cancelled.",
     "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:07:38.928577Z",
     "IsRead": true
   },
@@ -36,6 +39,7 @@
     "Title": "New Event Published",
     "Message": "\u0027new vent\u0027 has been scheduled for 07 Jul 2026. Explore specifications and secure your place today!",
     "Type": "EventCreated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:10:14.702492Z",
     "IsRead": true
   },
@@ -46,6 +50,7 @@
     "Title": "Event Schedule Modified",
     "Message": "Specifications for \u0027new vent\u0027 have been updated by the organizer. Review the latest changes.",
     "Type": "EventUpdated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:10:46.368074Z",
     "IsRead": true
   },
@@ -56,6 +61,7 @@
     "Title": "Event Schedule Modified",
     "Message": "Specifications for \u0027Music to your ears\u0027 have been updated by the organizer. Review the latest changes.",
     "Type": "EventUpdated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:11:15.600669Z",
     "IsRead": true
   },
@@ -66,6 +72,7 @@
     "Title": "Event Schedule Modified",
     "Message": "Specifications for \u0027new vent\u0027 have been updated by the organizer. Review the latest changes.",
     "Type": "EventUpdated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:11:25.161571Z",
     "IsRead": true
   },
@@ -76,6 +83,7 @@
     "Title": "Registration Confirmed",
     "Message": "Your reservation for \u0027Summer Tech Festival\u0027 has been successfully confirmed.",
     "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:16:34.395348Z",
     "IsRead": true
   },
@@ -86,6 +94,7 @@
     "Title": "Registration Cancelled",
     "Message": "Your registration for \u0027Summer Tech Festival\u0027 has been cancelled.",
     "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T10:16:46.003245Z",
     "IsRead": false
   },
@@ -96,6 +105,7 @@
     "Title": "New Event Published",
     "Message": "\u0027Game Play Time\u0027 has been scheduled for 15 Jul 2026. Explore specifications and secure your place today!",
     "Type": "EventCreated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T14:42:00.23755Z",
     "IsRead": true
   },
@@ -106,6 +116,7 @@
     "Title": "Event Schedule Modified",
     "Message": "Specifications for \u0027Game Play Time\u0027 have been updated by the organizer. Review the latest changes.",
     "Type": "EventUpdated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T14:42:21.693641Z",
     "IsRead": true
   },
@@ -116,6 +127,7 @@
     "Title": "Registration Confirmed",
     "Message": "Your reservation for \u0027Game Play Time\u0027 has been successfully confirmed.",
     "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T14:42:41.74363Z",
     "IsRead": true
   },
@@ -126,6 +138,7 @@
     "Title": "Registration Cancelled",
     "Message": "Your registration for \u0027Game Play Time\u0027 has been cancelled.",
     "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T14:42:52.518384Z",
     "IsRead": true
   },
@@ -136,6 +149,7 @@
     "Title": "Registration Confirmed",
     "Message": "Your reservation for \u0027Online Learning Workshop\u0027 has been successfully confirmed.",
     "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T16:03:17.850174Z",
     "IsRead": true
   },
@@ -146,6 +160,7 @@
     "Title": "Registration Cancelled",
     "Message": "Your registration for \u0027Online Learning Workshop\u0027 has been cancelled.",
     "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T16:03:36.311809Z",
     "IsRead": true
   },
@@ -156,6 +171,7 @@
     "Title": "Event Schedule Modified",
     "Message": "Specifications for \u0027Online Learning Workshop\u0027 have been updated by the organizer. Review the latest changes.",
     "Type": "EventUpdated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T16:20:03.102447Z",
     "IsRead": true
   },
@@ -166,6 +182,7 @@
     "Title": "New Event Published",
     "Message": "\u0027Coding\u0027 has been scheduled for 07 Jul 2026. Explore specifications and secure your place today!",
     "Type": "EventCreated",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T16:38:34.794553Z",
     "IsRead": true
   },
@@ -176,7 +193,228 @@
     "Title": "Registration Confirmed",
     "Message": "Your reservation for \u0027Coding\u0027 has been successfully confirmed.",
     "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T16:39:42.394133Z",
     "IsRead": true
+  },
+  {
+    "Id": "3c1c418c-ab9e-4050-a639-0e3cb7682577",
+    "ParticipantId": 10,
+    "EventId": 1,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Summer Tech Festival\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:15:41.963479Z",
+    "IsRead": true
+  },
+  {
+    "Id": "92b82200-6d88-432c-99ed-283f154d7642",
+    "ParticipantId": null,
+    "EventId": 7,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Music to your ears\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:32:25.58464Z",
+    "IsRead": true
+  },
+  {
+    "Id": "e15e14b1-0f5e-4108-a9c4-4d9a72b22698",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:34:41.600469Z",
+    "IsRead": true
+  },
+  {
+    "Id": "79cbb14f-85f8-4507-af4e-01ad50c15997",
+    "ParticipantId": 10,
+    "EventId": 7,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Music to your ears\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:37:51.823782Z",
+    "IsRead": true
+  },
+  {
+    "Id": "de1f9d97-cc20-4018-84d7-7e5983591bd0",
+    "ParticipantId": 10,
+    "EventId": 7,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Music to your ears\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:38:19.189952Z",
+    "IsRead": true
+  },
+  {
+    "Id": "0cbb3965-e8b0-4dd9-a0b5-b0f44574a9d3",
+    "ParticipantId": 10,
+    "EventId": 1,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Summer Tech Festival\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:40:13.876224Z",
+    "IsRead": true
+  },
+  {
+    "Id": "e00feffc-b257-4955-b028-2574b5934c1b",
+    "ParticipantId": 10,
+    "EventId": 10,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Game Play Time\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:41:41.112915Z",
+    "IsRead": true
+  },
+  {
+    "Id": "6d87cb3b-33db-4d6d-881c-cdbdab2ce550",
+    "ParticipantId": 10,
+    "EventId": 10,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Game Play Time\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:41:47.57509Z",
+    "IsRead": true
+  },
+  {
+    "Id": "ba4f2650-2214-4a57-9ee4-313ea504bf17",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Coding\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:43:02.513341Z",
+    "IsRead": true
+  },
+  {
+    "Id": "2157432a-7ce2-4b34-9613-1683bb3d8b36",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Added to Waitlist",
+    "Message": "\u0027Coding\u0027 is currently at capacity. You have been placed on the waitlist queue.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:50:47.208197Z",
+    "IsRead": true
+  },
+  {
+    "Id": "832881ed-8173-4904-9959-8dde521bff4e",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Waitlist Queue Alert",
+    "Message": "Participant \u0027John Hero\u0027 has joined the waitlist for \u0027Coding\u0027. Action required in the registration console.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:50:47.213499Z",
+    "IsRead": true
+  },
+  {
+    "Id": "a87d31a7-37e3-434a-a582-0fe3ff555b8c",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:51:54.54243Z",
+    "IsRead": true
+  },
+  {
+    "Id": "1391c049-1040-4b57-bb93-3befe8f40a17",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Waitlist Promoted",
+    "Message": "Great news! A space opened up and your registration for \u0027Coding\u0027 has been successfully confirmed.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T17:53:37.892856Z",
+    "IsRead": true
+  },
+  {
+    "Id": "731c6aba-760c-4acb-a925-9d28a9d785b7",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Added to Waitlist",
+    "Message": "\u0027Coding\u0027 is currently at capacity. You have been placed on the waitlist queue.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:02:31.071308Z",
+    "IsRead": true
+  },
+  {
+    "Id": "a20fba0a-37a7-4cde-aefe-8596825effb9",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Waitlist Queue Alert",
+    "Message": "Participant \u0027Ram Hero\u0027 has joined the waitlist for \u0027Coding\u0027. Action required in the registration console.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": true,
+    "CreatedAt": "2026-06-30T18:02:31.073346Z",
+    "IsRead": true
+  },
+  {
+    "Id": "4b15b8a5-9a7e-47de-ae53-6ec9e0ec7674",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:03:25.825036Z",
+    "IsRead": true
+  },
+  {
+    "Id": "b7146d76-c091-4cbc-ac93-4a55d9bf8021",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Waitlist Promoted",
+    "Message": "Great news! A space opened up and your registration for \u0027Coding\u0027 has been successfully confirmed.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:03:44.488296Z",
+    "IsRead": true
+  },
+  {
+    "Id": "d552f5b3-4047-48f7-8641-4a97668f104f",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Added to Waitlist",
+    "Message": "\u0027Coding\u0027 is currently at capacity. You have been placed on the waitlist queue.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:04:22.232679Z",
+    "IsRead": false
+  },
+  {
+    "Id": "f8a5bf3c-59a5-4db8-9129-0e189f49b00e",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Waitlist Queue Alert",
+    "Message": "Participant \u0027John Hero\u0027 has joined the waitlist for \u0027Coding\u0027. Action required in the registration console.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": true,
+    "CreatedAt": "2026-06-30T18:04:22.235283Z",
+    "IsRead": false
+  },
+  {
+    "Id": "f15acc5d-6de3-40bc-93c9-eb9dfd697e5f",
+    "ParticipantId": 11,
+    "EventId": 5,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Online Learning Workshop\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:19:14.943141Z",
+    "IsRead": false
   }
 ]

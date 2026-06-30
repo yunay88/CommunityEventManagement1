@@ -32,7 +32,7 @@ namespace CommunityEventManagement.Web.ViewModels
                 CurrentCapacity = v.CurrentCapacity,
                 OccupancyRate = v.GetOccupancyRate(),
                 HasAvailableSpace = v.HasAvailableSpace(),
-                EventCount = v.Events?.Count ?? 0
+                EventCount = v.EventVenues?.Count ?? 0
             };
         }
     }

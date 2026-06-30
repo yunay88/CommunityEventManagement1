@@ -2,22 +2,18 @@ using System.Text.Json;
 using CommunityEventManagement.Domain.Entities;
 using CommunityEventManagement.Domain.Interfaces;
 using CommunityEventManagement.Domain.Interfaces.Services;
-using Microsoft.Extensions.DependencyInjection; // <-- REQUIRED FOR ISERVICESCOPEFACTORY
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityEventManagement.Infrastructure.Services
 {
-    /// <summary>
-    /// Implements real-time Notification messaging backed by an asynchronous JSON document store.
-    /// Demonstrates Polyglot Persistence and safe Scoped Service consumption from a Singleton via IServiceScopeFactory.
-    /// </summary>
     public class NotificationService : INotificationService
     {
         private readonly string _filePath = "NotificationsData.json";
         private readonly List<Notification> _notifications = new();
         private readonly SemaphoreSlim _fileLock = new(1, 1);
         private readonly ILogger<NotificationService> _logger;
-        private readonly IServiceScopeFactory _scopeFactory; // <-- INJECTED SCOPE FACTORY
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public event Action? OnNotificationUpdated;
 
@@ -45,7 +41,8 @@ namespace CommunityEventManagement.Infrastructure.Services
                         Title = "Welcome to Community Events",
                         Message = "Explore upcoming events, secure your place, and receive real-time schedule updates.",
                         Type = "EventCreated",
-                        CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+                        CreatedAt = DateTime.UtcNow.AddMinutes(-5),
+                        ForAdminOnly = false
                     });
                     SaveNotificationsToFileAsync().GetAwaiter().GetResult();
                 }
@@ -75,9 +72,6 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
         }
 
-        /// <summary>
-        /// Filters notifications so participants see personal alerts + broadcasts created AFTER their registration date.
-        /// </summary>
         public async Task<IEnumerable<Notification>> GetNotificationsForParticipantAsync(int participantId)
         {
             DateTime regDate = DateTime.MinValue;
@@ -89,7 +83,7 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
 
             return _notifications
-                .Where(n => n.ParticipantId == participantId || (n.ParticipantId == null && n.CreatedAt >= regDate))
+                .Where(n => n.ParticipantId == participantId || (n.ParticipantId == null && !n.ForAdminOnly && n.CreatedAt >= regDate))
                 .OrderByDescending(n => n.CreatedAt)
                 .ToList();
         }
@@ -105,7 +99,7 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
 
             return _notifications
-                .Count(n => (n.ParticipantId == participantId || (n.ParticipantId == null && n.CreatedAt >= regDate)) && !n.IsRead);
+                .Count(n => (n.ParticipantId == participantId || (n.ParticipantId == null && !n.ForAdminOnly && n.CreatedAt >= regDate)) && !n.IsRead);
         }
 
         public async Task MarkAsReadAsync(string notificationId)
@@ -129,7 +123,7 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
 
             bool modified = false;
-            foreach (var notif in _notifications.Where(n => (n.ParticipantId == participantId || (n.ParticipantId == null && n.CreatedAt >= regDate)) && !n.IsRead))
+            foreach (var notif in _notifications.Where(n => (n.ParticipantId == participantId || (n.ParticipantId == null && !n.ForAdminOnly && n.CreatedAt >= regDate)) && !n.IsRead))
             {
                 notif.IsRead = true;
                 modified = true;
@@ -137,15 +131,59 @@ namespace CommunityEventManagement.Infrastructure.Services
             if (modified) await SaveNotificationsToFileAsync();
         }
 
+        // <-- ENTERPRISE ADMIN ROUTING IMPLEMENTATION
+        public async Task<IEnumerable<Notification>> GetAdminNotificationsAsync()
+        {
+            await Task.CompletedTask;
+            return _notifications
+                .Where(n => n.ForAdminOnly || (n.ParticipantId == null && !n.ForAdminOnly))
+                .OrderByDescending(n => n.CreatedAt)
+                .ToList();
+        }
+
+        public async Task<int> GetAdminUnreadCountAsync()
+        {
+            await Task.CompletedTask;
+            return _notifications
+                .Count(n => (n.ForAdminOnly || (n.ParticipantId == null && !n.ForAdminOnly)) && !n.IsRead);
+        }
+
+        public async Task MarkAdminAsReadAsync(string notificationId)
+        {
+            var notif = _notifications.FirstOrDefault(n => n.Id == notificationId);
+            if (notif != null && !notif.IsRead)
+            {
+                notif.IsRead = true;
+                await SaveNotificationsToFileAsync();
+            }
+        }
+
+        public async Task MarkAllAdminAsReadAsync()
+        {
+            bool modified = false;
+            foreach (var notif in _notifications.Where(n => (n.ForAdminOnly || (n.ParticipantId == null && !n.ForAdminOnly)) && !n.IsRead))
+            {
+                notif.IsRead = true;
+                modified = true;
+            }
+            if (modified) await SaveNotificationsToFileAsync();
+        }
+
+        public async Task CreateAdminNotificationAsync(string title, string message, int? eventId, string type)
+        {
+            _notifications.Add(new Notification { Title = title, Message = message, EventId = eventId, Type = type, ParticipantId = null, ForAdminOnly = true });
+            await SaveNotificationsToFileAsync();
+        }
+
         public async Task CreateBroadcastNotificationAsync(string title, string message, int? eventId, string type)
         {
-            _notifications.Add(new Notification { Title = title, Message = message, EventId = eventId, Type = type, ParticipantId = null });
+            _notifications.Add(new Notification { Title = title, Message = message, EventId = eventId, Type = type, ParticipantId = null, ForAdminOnly = false });
             await SaveNotificationsToFileAsync();
         }
 
         public async Task CreateUserNotificationAsync(int participantId, string title, string message, int? eventId, string type)
         {
-            _notifications.Add(new Notification { ParticipantId = participantId, Title = title, Message = message, EventId = eventId, Type = type });
+            _notifications.Add(new Notification { ParticipantId = participantId, Title = title, Message = message, EventId = eventId, Type = type, ForAdminOnly = false });
             await SaveNotificationsToFileAsync();
         }
 
@@ -162,7 +200,8 @@ namespace CommunityEventManagement.Infrastructure.Services
                         Title = "Event Approaching",
                         Message = $"Reminder: '{evt.Name}' is starting on {evt.StartDate:dd MMM yyyy, HH:mm}. Don't miss it!",
                         EventId = evt.Id,
-                        Type = "EventApproaching"
+                        Type = "EventApproaching",
+                        ForAdminOnly = false
                     });
                     added = true;
                 }

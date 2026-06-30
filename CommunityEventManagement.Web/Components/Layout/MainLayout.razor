@@ -1,4 +1,5 @@
 ﻿@using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Domain.Interfaces.Services
 @inherits LayoutComponentBase
 @inject AuthStateService AuthState
 @inject INotificationService NotificationService
@@ -29,6 +30,7 @@
                     <NavLink class="portal-nav-link" href="/events">
                         <i class="bi bi-calendar-range"></i> Events Catalog
                     </NavLink>
+                    <!-- Real-Time Notification Console Link -->
                     <NavLink class="portal-nav-link" href="/notifications">
                         <i class="bi bi-bell"></i> Notifications
                         @if (_unreadCount > 0)
@@ -126,18 +128,6 @@ else
 }
 
 @code {
-    protected override void OnInitialized()
-    {
-        AuthState.OnAuthStateChanged += StateHasChanged;
-    }
-
-    public void Dispose()
-    {
-        AuthState.OnAuthStateChanged -= StateHasChanged;
-        NotificationService.OnNotificationUpdated -= NotificationsChanged;
-    }
-
-    @code {
     private int _unreadCount = 0;
 
     protected override async Task OnInitializedAsync()
@@ -152,9 +142,16 @@ else
 
     private async Task LoadUnreadCountAsync()
     {
-        if (AuthState.IsAuthenticated && AuthState.UserId.HasValue)
+        if (AuthState.IsAuthenticated)
         {
-            _unreadCount = await NotificationService.GetUnreadCountAsync(AuthState.UserId.Value);
+            if (AuthState.IsAdmin)
+            {
+                _unreadCount = await NotificationService.GetAdminUnreadCountAsync();
+            }
+            else if (AuthState.UserId.HasValue)
+            {
+                _unreadCount = await NotificationService.GetUnreadCountAsync(AuthState.UserId.Value);
+            }
         }
         else
         {
@@ -162,5 +159,9 @@ else
         }
     }
 
-}
+    public void Dispose()
+    {
+        AuthState.OnAuthStateChanged -= AuthChanged;
+        NotificationService.OnNotificationUpdated -= NotificationsChanged;
+    }
 }

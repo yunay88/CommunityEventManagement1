@@ -12,7 +12,7 @@ namespace CommunityEventManagement.Infrastructure.Repositories
         public async Task<Venue?> GetWithEventsAsync(int id)
         {
             return await _context.Venues
-                .Include(v => v.Events)
+                .Include(v => v.EventVenues) 
                 .FirstOrDefaultAsync(v => v.Id == id);
         }
 
@@ -28,6 +28,7 @@ namespace CommunityEventManagement.Infrastructure.Repositories
         public override async Task<IEnumerable<Venue>> GetAllAsync()
         {
             return await _context.Venues
+                .Include(v => v.EventVenues) // <-- NOW INCLUDES M:N JUNCTIONS
                 .OrderBy(v => v.Name)
                 .AsNoTracking()
                 .ToListAsync();
