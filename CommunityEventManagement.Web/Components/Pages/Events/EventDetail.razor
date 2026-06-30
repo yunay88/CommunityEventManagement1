@@ -297,7 +297,8 @@
         {
             var myReg = _event.Registrations.FirstOrDefault(r =>
                 string.Equals(r.ParticipantEmail, AuthState.CurrentUser.Email,
-                    StringComparison.OrdinalIgnoreCase));
+                    StringComparison.OrdinalIgnoreCase) &&
+                r.Status != CommunityEventManagement.Domain.Enums.RegistrationStatus.Cancelled); // <-- ADDED THIS
 
             if (myReg != null)
             {

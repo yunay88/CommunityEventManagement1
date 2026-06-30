@@ -40,6 +40,8 @@ builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<INotificationService, NotificationService>(); 
+
 
 builder.Services.AddScoped<EventFactory>();
 builder.Services.AddScoped<ParticipantFactory>();

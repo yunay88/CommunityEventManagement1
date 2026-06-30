@@ -56,9 +56,9 @@ public class LoginComponentTests : TestContext
         cut.Find("button[type='submit']").Should().NotBeNull();
     }
 
-    private class FakeAuthStateService : AuthStateService
+      private class FakeAuthStateService : AuthStateService
     {
-        public FakeAuthStateService() : base(null!, null!) { }
+        public FakeAuthStateService() : base(null!, null!) { ClearGlobalCache(); }
 
         public override Task<bool> LoginAsync(string email, string password)
             => Task.FromResult(false);

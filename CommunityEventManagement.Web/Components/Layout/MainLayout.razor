@@ -1,6 +1,7 @@
 ﻿@using CommunityEventManagement.Web.Services
 @inherits LayoutComponentBase
 @inject AuthStateService AuthState
+@inject INotificationService NotificationService
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -11,9 +12,11 @@
         <!-- Vertical Sidebar -->
         <aside class="portal-sidebar shadow-sm">
             <!-- Brand Header -->
-            <div class="p-4 border-bottom d-flex align-items-center">
-                <i class="bi bi-layers-fill text-primary fs-4 me-2"></i>
-                <span class="fw-bold text-dark fs-5">Community Events</span>
+            <div class="p-4 border-bottom">
+                <a href="/" class="text-decoration-none d-flex align-items-center">
+                    <i class="bi bi-layers-fill text-primary fs-4 me-2"></i>
+                    <span class="fw-bold text-dark fs-5">Community Events</span>
+                </a>
             </div>
 
             <!-- Navigation Sections -->
@@ -25,6 +28,13 @@
                     </NavLink>
                     <NavLink class="portal-nav-link" href="/events">
                         <i class="bi bi-calendar-range"></i> Events Catalog
+                    </NavLink>
+                    <NavLink class="portal-nav-link" href="/notifications">
+                        <i class="bi bi-bell"></i> Notifications
+                        @if (_unreadCount > 0)
+                        {
+                            <span class="badge bg-danger ms-auto px-2 py-1 rounded-pill shadow-sm">@_unreadCount</span>
+                        }
                     </NavLink>
                 </div>
 
@@ -124,5 +134,33 @@ else
     public void Dispose()
     {
         AuthState.OnAuthStateChanged -= StateHasChanged;
+        NotificationService.OnNotificationUpdated -= NotificationsChanged;
     }
+
+    @code {
+    private int _unreadCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnAuthStateChanged += AuthChanged;
+        NotificationService.OnNotificationUpdated += NotificationsChanged;
+        await LoadUnreadCountAsync();
+    }
+
+    private async void AuthChanged() => await InvokeAsync(async () => { await LoadUnreadCountAsync(); StateHasChanged(); });
+    private async void NotificationsChanged() => await InvokeAsync(async () => { await LoadUnreadCountAsync(); StateHasChanged(); });
+
+    private async Task LoadUnreadCountAsync()
+    {
+        if (AuthState.IsAuthenticated && AuthState.UserId.HasValue)
+        {
+            _unreadCount = await NotificationService.GetUnreadCountAsync(AuthState.UserId.Value);
+        }
+        else
+        {
+            _unreadCount = 0;
+        }
+    }
+
+}
 }

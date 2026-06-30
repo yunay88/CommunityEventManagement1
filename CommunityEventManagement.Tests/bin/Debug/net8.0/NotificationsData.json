@@ -1,0 +1,162 @@
+[
+  {
+    "Id": "88186933-8a0f-4623-83bd-bb6ad3157753",
+    "ParticipantId": null,
+    "EventId": null,
+    "Title": "Welcome to Community Events",
+    "Message": "Explore upcoming events, secure your place, and receive real-time schedule updates.",
+    "Type": "EventCreated",
+    "CreatedAt": "2026-06-30T09:59:52.054603Z",
+    "IsRead": true
+  },
+  {
+    "Id": "d0f84759-be00-4c6b-882d-ad1861f95ca9",
+    "ParticipantId": null,
+    "EventId": 5,
+    "Title": "Event Approaching",
+    "Message": "Reminder: \u0027Online Learning Workshop\u0027 is starting on 01 Jul 2026, 23:05. Don\u0027t miss it!",
+    "Type": "EventApproaching",
+    "CreatedAt": "2026-06-30T10:06:47.418824Z",
+    "IsRead": true
+  },
+  {
+    "Id": "28bf3277-2a9d-4250-9a7d-a9a4b7b976d3",
+    "ParticipantId": 7,
+    "EventId": 4,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Art and Culture Week\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "CreatedAt": "2026-06-30T10:07:38.928577Z",
+    "IsRead": true
+  },
+  {
+    "Id": "653cc7f5-d9c3-4b38-a3f1-ae4bf1c01471",
+    "ParticipantId": null,
+    "EventId": 9,
+    "Title": "New Event Published",
+    "Message": "\u0027new vent\u0027 has been scheduled for 07 Jul 2026. Explore specifications and secure your place today!",
+    "Type": "EventCreated",
+    "CreatedAt": "2026-06-30T10:10:14.702492Z",
+    "IsRead": true
+  },
+  {
+    "Id": "e4bc79d8-e564-4327-8875-aa04f095a8d5",
+    "ParticipantId": null,
+    "EventId": 9,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027new vent\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "CreatedAt": "2026-06-30T10:10:46.368074Z",
+    "IsRead": true
+  },
+  {
+    "Id": "4ac3d6cc-b5c3-4d23-a840-4cbf141986bd",
+    "ParticipantId": null,
+    "EventId": 7,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Music to your ears\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "CreatedAt": "2026-06-30T10:11:15.600669Z",
+    "IsRead": true
+  },
+  {
+    "Id": "99d84b70-42f8-48b7-8072-12815c85980c",
+    "ParticipantId": null,
+    "EventId": 9,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027new vent\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "CreatedAt": "2026-06-30T10:11:25.161571Z",
+    "IsRead": true
+  },
+  {
+    "Id": "868efb31-5278-466e-93fc-b579e7614a04",
+    "ParticipantId": 7,
+    "EventId": 1,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Summer Tech Festival\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "CreatedAt": "2026-06-30T10:16:34.395348Z",
+    "IsRead": true
+  },
+  {
+    "Id": "99ad304a-3acb-4de5-a13d-9a53727c6adf",
+    "ParticipantId": 7,
+    "EventId": 1,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Summer Tech Festival\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "CreatedAt": "2026-06-30T10:16:46.003245Z",
+    "IsRead": false
+  },
+  {
+    "Id": "5c3a6a4b-b0a8-4a27-b70d-55f3e4c5782e",
+    "ParticipantId": null,
+    "EventId": 10,
+    "Title": "New Event Published",
+    "Message": "\u0027Game Play Time\u0027 has been scheduled for 15 Jul 2026. Explore specifications and secure your place today!",
+    "Type": "EventCreated",
+    "CreatedAt": "2026-06-30T14:42:00.23755Z",
+    "IsRead": true
+  },
+  {
+    "Id": "da26e55a-b684-4a7f-8e4d-305764bdd667",
+    "ParticipantId": null,
+    "EventId": 10,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Game Play Time\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "CreatedAt": "2026-06-30T14:42:21.693641Z",
+    "IsRead": true
+  },
+  {
+    "Id": "48d5ccb5-dc17-433b-a7c2-a5dcd7923b2e",
+    "ParticipantId": 9,
+    "EventId": 10,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Game Play Time\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "CreatedAt": "2026-06-30T14:42:41.74363Z",
+    "IsRead": true
+  },
+  {
+    "Id": "87e11f4e-3f63-4c18-9f42-0c4ff88a0005",
+    "ParticipantId": 9,
+    "EventId": 10,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Game Play Time\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "CreatedAt": "2026-06-30T14:42:52.518384Z",
+    "IsRead": true
+  },
+  {
+    "Id": "e7c67d4c-42fd-47aa-aa2b-5be8960cd26b",
+    "ParticipantId": 10,
+    "EventId": 5,
+    "Title": "Registration Confirmed",
+    "Message": "Your reservation for \u0027Online Learning Workshop\u0027 has been successfully confirmed.",
+    "Type": "RegistrationConfirmed",
+    "CreatedAt": "2026-06-30T16:03:17.850174Z",
+    "IsRead": true
+  },
+  {
+    "Id": "52daad0c-1fb4-41e6-bed3-29710647ebba",
+    "ParticipantId": 10,
+    "EventId": 5,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Online Learning Workshop\u0027 has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "CreatedAt": "2026-06-30T16:03:36.311809Z",
+    "IsRead": true
+  },
+  {
+    "Id": "b9b89157-6c72-44a8-99af-e9da7a3f1181",
+    "ParticipantId": null,
+    "EventId": 5,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Online Learning Workshop\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "CreatedAt": "2026-06-30T16:20:03.102447Z",
+    "IsRead": true
+  }
+]

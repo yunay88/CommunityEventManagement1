@@ -468,3 +468,4 @@
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Tests/obj/Debug/net8.0/CommunityEventManagement.Tests.genruntimeconfig.cache
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Tests/obj/Debug/net8.0/ref/CommunityEventManagement.Tests.dll
 /Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Tests/obj/Debug/net8.0/CommunityEventManagement.Tests.sourcelink.json
+/Users/bishalthapa/Downloads/CommunityEventManagement/CommunityEventManagement.Tests/bin/Debug/net8.0/NotificationsData.json

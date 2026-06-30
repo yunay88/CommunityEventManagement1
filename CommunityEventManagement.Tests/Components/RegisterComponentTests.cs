@@ -43,7 +43,7 @@ public class RegisterComponentTests : TestContext
 
     private class FakeAuthStateService : AuthStateService
     {
-        public FakeAuthStateService() : base(null!, null!) { }
+        public FakeAuthStateService() : base(null!, null!) { ClearGlobalCache(); }
 
         public override Task<RegisterResult> RegisterParticipantAsync(
             string firstName, string lastName, string email,

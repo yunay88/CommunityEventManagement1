@@ -61,7 +61,9 @@ namespace CommunityEventManagement.Domain.Entities
         public decimal GetOccupancyRate()
         {
             if (MaxCapacity == 0) return 0;
-            return Math.Round((decimal)(MaxCapacity - CurrentCapacity) / MaxCapacity * 100, 2);
+            int occupied = MaxCapacity - CurrentCapacity;
+            if (occupied < 0) occupied = 0; // Safeguard against negative calculation
+            return Math.Round((decimal)occupied / MaxCapacity * 100, 2);
         }
 
         public override string GetDisplayName() => Name;
@@ -69,18 +71,26 @@ namespace CommunityEventManagement.Domain.Entities
         public override string GetSummary()
         {
             return $"Venue: {Name} | {Address}, {City} | " +
-                   $"Capacity: {CurrentCapacity}/{MaxCapacity} | " +
-                   $"Occupancy: {GetOccupancyRate()}%";
+                   $"{CurrentCapacity} available out of {MaxCapacity}";
         }
 
         public void UpdateDetails(string name, string address, string city, int maxCapacity)
         {
             if (maxCapacity <= 0)
                 throw new VenueCapacityException($"Capacity must be greater than zero.");
+
+            // Calculate currently occupied seats before changing max capacity
+            int occupiedSeats = MaxCapacity - CurrentCapacity;
+            if (occupiedSeats < 0) occupiedSeats = 0;
+
+            if (maxCapacity < occupiedSeats)
+                throw new VenueCapacityException($"Cannot reduce max capacity below the number of currently registered participants ({occupiedSeats}).");
+
             Name = name.Trim();
             Address = address.Trim();
             City = city.Trim();
             MaxCapacity = maxCapacity;
+            CurrentCapacity = maxCapacity - occupiedSeats; // <-- KEEPS CURRENT CAPACITY IN PERFECT SYNC
             MarkAsUpdated();
         }
 

@@ -3,15 +3,12 @@ using CommunityEventManagement.Web.ViewModels;
 
 namespace CommunityEventManagement.Web.Services
 {
-    /// <summary>
-    /// Manages authentication state across Blazor components.
-    /// Wraps IAuthService for UI consumption.
-    /// </summary>
     public class AuthStateService
     {
         private readonly IAuthService _authService;
         private readonly IParticipantService _participantService;
         private UserSessionViewModel _currentUser = new();
+        private static UserSessionViewModel? _globalCachedSession = null; // <-- CACHES SESSION ACROSS F5 REFRESH
 
         public event Action? OnAuthStateChanged;
 
@@ -21,7 +18,13 @@ namespace CommunityEventManagement.Web.Services
         {
             _authService = authService;
             _participantService = participantService;
+            if (_globalCachedSession != null)
+            {
+                _currentUser = _globalCachedSession;
+            }
         }
+
+        public static void ClearGlobalCache() => _globalCachedSession = null;
 
         public UserSessionViewModel CurrentUser => _currentUser;
         public bool IsAuthenticated => _currentUser.IsAuthenticated;
@@ -29,7 +32,6 @@ namespace CommunityEventManagement.Web.Services
         public bool IsParticipant => _currentUser.IsParticipant;
         public int? UserId => _currentUser.UserId;
 
-        // ↓ virtual — needed for bUnit tests to override
         public virtual async Task<bool> LoginAsync(string email, string password)
         {
             var loginModel = new CommunityEventManagement.Domain.Models.LoginModel
@@ -52,12 +54,12 @@ namespace CommunityEventManagement.Web.Services
                 FullName = user.GetFullName(),
                 Role = user.Role.ToString()
             };
+            _globalCachedSession = _currentUser; // <-- SAVES TO CACHE
 
             NotifyStateChanged();
             return true;
         }
 
-        // ↓ virtual — needed for bUnit tests to override
         public virtual async Task<RegisterResult> RegisterParticipantAsync(
             string firstName, string lastName, string email,
             string? phoneNumber, string password)
@@ -92,20 +94,17 @@ namespace CommunityEventManagement.Web.Services
             }
         }
 
-        // ↓ virtual — needed for bUnit tests to override
         public virtual async Task LogoutAsync()
         {
             await _authService.LogoutAsync();
             _currentUser = new UserSessionViewModel { IsAuthenticated = false };
+            _globalCachedSession = null; // <-- CLEARS CACHE ON LOGOUT
             NotifyStateChanged();
         }
 
         private void NotifyStateChanged() => OnAuthStateChanged?.Invoke();
     }
 
-    /// <summary>
-    /// Result of a self-registration attempt.
-    /// </summary>
     public class RegisterResult
     {
         public bool Success { get; set; }

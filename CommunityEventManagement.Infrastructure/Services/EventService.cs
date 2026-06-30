@@ -24,13 +24,16 @@ namespace CommunityEventManagement.Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<EventService> _logger;
 
+        private readonly INotificationService? _notificationService;
+
         // Constructor injection — demonstrates Dependency Injection pattern
-        public EventService(IUnitOfWork unitOfWork, ILogger<EventService> logger)
+        public EventService(IUnitOfWork unitOfWork, ILogger<EventService> logger, INotificationService? notificationService = null)
         {
             _unitOfWork = unitOfWork
                 ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger
                 ?? throw new ArgumentNullException(nameof(logger));
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<Event>> GetAllEventsAsync()
@@ -162,6 +165,8 @@ namespace CommunityEventManagement.Infrastructure.Services
                 _logger.LogInformation(
                     "Event created successfully. ID: {EventId}", eventEntity.Id);
 
+                
+
                 return eventEntity;
             }
             catch (CommunityEventException)
@@ -252,7 +257,15 @@ namespace CommunityEventManagement.Infrastructure.Services
                         "Event created successfully with M:N venues + activities. ID: {EventId}",
                         eventEntity.Id);
 
-                    return eventEntity;
+                    if (_notificationService != null)
+                    {
+                        await _notificationService.CreateBroadcastNotificationAsync(
+                            "New Event Published",
+                            $"'{eventEntity.Name}' has been scheduled for {eventEntity.StartDate:dd MMM yyyy}. Explore specifications and secure your place today!",
+                            eventEntity.Id,
+                            "EventCreated");
+                    }
+                    return eventEntity;    
                 }
                 catch
                 {
@@ -269,8 +282,7 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
             finally { _logger.LogDebug("CreateEventWithVenuesAsync completed"); }
         }
-
-        public async Task UpdateEventWithVenuesAsync(
+                public async Task UpdateEventWithVenuesAsync(
             int id,
             string name,
             string description,
@@ -294,15 +306,22 @@ namespace CommunityEventManagement.Infrastructure.Services
                         ?? throw new EventNotFoundException(id);
 
                     eventEntity.UpdateDetails(name, description, startDate, endDate, null);
+                    
+                    // <-- UNBINDS NAVIGATION PROPERTIES TO PREVENT EF CHANGETRACKER CONFLICTS
+                    eventEntity.EventVenuesCollection?.Clear();
+                    eventEntity.EventActivitiesCollection?.Clear();
                     await _unitOfWork.Events.UpdateAsync(eventEntity);
+                    await _unitOfWork.SaveChangesAsync(); // <-- SAVES EVENT CHANGES FIRST
 
-                    // Replace EventVenue links (Fixes CS0103 _context error using existing GetByEventAsync)
+                    // 1. Remove old EventVenue links & FLUSH ChangeTracker
                     var existingLinks = await _unitOfWork.EventVenues.GetByEventAsync(id);
                     foreach (var link in existingLinks)
                     {
                         await _unitOfWork.EventVenues.RemoveLinkAsync(link.EventId, link.VenueId);
                     }
+                    await _unitOfWork.SaveChangesAsync(); // <-- FLUSHES DELETIONS FROM CHANGE TRACKER
 
+                    // 2. Add new EventVenue links & FLUSH
                     for (int i = 0; i < venueIds.Count; i++)
                     {
                         await _unitOfWork.EventVenues.AddAsync(new Domain.Entities.EventVenue
@@ -313,16 +332,18 @@ namespace CommunityEventManagement.Infrastructure.Services
                             DisplayOrder = i
                         });
                     }
+                    await _unitOfWork.SaveChangesAsync(); // <-- SAVES NEW VENUES
 
-                    // Replace EventActivity links (Fixes CS0103 _context error using existing GetAllAsync)
+                    // 3. Remove old EventActivity links (Fixes CS1061 using existing GetAllAsync)
                     var allActivities = await _unitOfWork.EventActivities.GetAllAsync();
                     var existingActivities = allActivities.Where(ea => ea.EventId == id).ToList();
                     foreach (var act in existingActivities)
                     {
                         await _unitOfWork.EventActivities.RemoveLinkAsync(act.EventId, act.ActivityId);
                     }
+                    await _unitOfWork.SaveChangesAsync(); // <-- FLUSHES DELETIONS FROM CHANGE TRACKER
 
-                    // Add new EventActivity links (Fixes CS8602 Null Dereference Warning)
+                    // 4. Add new EventActivity links (Fixes CS8602 Null Dereference)
                     var safeActivityIdsUpdate = activityIds ?? new List<int>();
                     foreach (var activityId in safeActivityIdsUpdate)
                     {
@@ -341,6 +362,16 @@ namespace CommunityEventManagement.Infrastructure.Services
                     await _unitOfWork.SaveChangesAsync();
                     await _unitOfWork.CommitTransactionAsync();
 
+                    // Optional Notification Broadcast
+                    if (_notificationService != null)
+                    {
+                        await _notificationService.CreateBroadcastNotificationAsync(
+                            "Event Schedule Modified",
+                            $"Specifications for '{eventEntity.Name}' have been updated by the organizer. Review the latest changes.",
+                            id,
+                            "EventUpdated");
+                    }
+
                     _logger.LogInformation("Event {EventId} updated successfully", id);
                 }
                 catch
@@ -358,9 +389,6 @@ namespace CommunityEventManagement.Infrastructure.Services
             }
             finally { _logger.LogDebug("UpdateEventWithVenuesAsync completed for {EventId}", id); }
         }
-
-
-
 
         public async Task UpdateEventAsync(
             int id,

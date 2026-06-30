@@ -14,17 +14,21 @@ namespace CommunityEventManagement.Infrastructure.Services
         private readonly ILogger<RegistrationService> _logger;
         private readonly RegistrationNotifier _notifier;
 
+        private readonly INotificationService? _notificationService;
+
         // Queue data structure — manages waiting lists per event
         private readonly Dictionary<int, RegistrationQueue> _waitingLists = new();
 
         public RegistrationService(
             IUnitOfWork unitOfWork,
             ILogger<RegistrationService> logger,
-            RegistrationNotifier notifier)
+            RegistrationNotifier notifier,
+            INotificationService? notificationService = null)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<Registration>> GetRegistrationsByParticipantAsync(int participantId)
@@ -154,7 +158,19 @@ namespace CommunityEventManagement.Infrastructure.Services
                     _logger.LogWarning(nex, "Observer notification failed (non-fatal)");
                 }
 
+                if (_notificationService != null)
+                {
+                    var title = registration.IsConfirmed() ? "Registration Confirmed" : "Added to Waitlist";
+                    var msg = registration.IsConfirmed() 
+                        ? $"Your reservation for '{eventEntity.Name}' has been successfully confirmed."
+                        : $"'{eventEntity.Name}' is currently at capacity. You have been placed on the waitlist queue.";
+                    var type = registration.IsConfirmed() ? "RegistrationConfirmed" : "WaitlistPromoted";
+                    
+                    await _notificationService.CreateUserNotificationAsync(participantId, title, msg, eventId, type);
+                }
                 return registration;
+
+                
             }
             catch (CommunityEventException)
             {
@@ -216,6 +232,16 @@ namespace CommunityEventManagement.Infrastructure.Services
                 catch (Exception nex)
                 {
                     _logger.LogWarning(nex, "Observer notification failed on cancellation (non-fatal)");
+                }
+
+                if (_notificationService != null)
+                {
+                    await _notificationService.CreateUserNotificationAsync(
+                        regParticipantId,
+                        "Registration Cancelled",
+                        $"Your registration for '{regEventName}' has been cancelled.",
+                        regEventId,
+                        "RegistrationCancelled");
                 }
 
                 _logger.LogInformation("Registration {Id} cancelled successfully", registrationId);

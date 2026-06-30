@@ -1,13 +1,15 @@
 @page "/events/create"
-
-@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization
+@using CommunityEventManagement.Domain.Enums
+@using CommunityEventManagement.Web.ViewModels
+@using CommunityEventManagement.Web.Services
 @inject IEventService EventService
 @inject IVenueService VenueService
 @inject IActivityService ActivityService
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
-<PageTitle>Create Event</PageTitle>
+<PageTitle>Create Event Console — Community Events</PageTitle>
 
 @code {
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
@@ -15,91 +17,139 @@
 
 @if (!AuthState.IsAdmin)
 {
-    <div class="alert alert-danger">
-        <h5>Admin Access Required</h5>
-        <p>You must be logged in as an Administrator to create events.</p>
-        <a href="/login" class="btn btn-primary btn-sm">Login</a>
+    <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-5">
+        <i class="bi bi-shield-lock display-4 text-muted mb-3 d-block"></i>
+        <h4 class="fw-bold text-dark mb-1">Admin Access Required</h4>
+        <p class="text-muted mb-4">You must be actively logged in as an Administrator to construct new community schedules.</p>
+        <a href="/login" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">Sign in</a>
     </div>
 }
 else
 {
-<h2 class="fw-bold mb-3">Create Event</h2>
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Create Event Console</h1>
+        <p class="text-muted small mb-0">Establish new community schedules, configure M:N venues, and assign activity workflows.</p>
+    </div>
+    <a href="/events" class="btn btn-outline-secondary small py-2 px-4 fw-bold shadow-sm">
+        <i class="bi bi-arrow-left me-2"></i> Back to catalog
+    </a>
+</div>
 
-@if (!string.IsNullOrEmpty(_errorMessage))
-{
-    <div class="alert alert-danger">@_errorMessage</div>
-}
+<div class="container pb-5">
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Error:</strong> @_errorMessage</div>
+        </div>
+    }
 
-<div class="card">
-    <div class="card-body">
+    <div class="modern-container card border-0 shadow-sm rounded-4 p-4 p-lg-5 bg-white mb-5">
         <EditForm Model="_model" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
-            <ValidationSummary class="alert alert-warning" />
+            <ValidationSummary class="alert alert-warning mb-4 shadow-sm" />
 
-            <div class="row mb-3">
+            <div class="row mb-4">
                 <div class="col-md-8">
-                    <label class="form-label fw-semibold">Event Name <span class="text-danger">*</span></label>
-                    <input @bind="_model.Name" class="form-control" placeholder="Enter event name" />
+                    <label class="form-label fw-bold text-dark">Event Name <span class="text-danger">*</span></label>
+                    <input @bind="_model.Name" class="form-control py-2" placeholder="Enter event name" />
                     <ValidationMessage For="@(() => _model.Name)" class="text-danger small" />
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea @bind="_model.Description" class="form-control" rows="3"
-                          placeholder="Describe your event"></textarea>
+            <div class="mb-4">
+                <label class="form-label fw-bold text-dark">Description</label>
+                <textarea @bind="_model.Description" class="form-control py-2" rows="3"
+                          placeholder="Describe the community event specifications"></textarea>
             </div>
 
-            <div class="row mb-3">
+            <div class="row mb-4">
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Start Date & Time <span class="text-danger">*</span></label>
-                    <input type="datetime-local" @bind="_model.StartDate" class="form-control" />
+                    <label class="form-label fw-bold text-dark">Start Date & Time <span class="text-danger">*</span></label>
+                    <input type="datetime-local" @bind="_model.StartDate" class="form-control py-2" />
                     <ValidationMessage For="@(() => _model.StartDate)" class="text-danger small" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">End Date & Time <span class="text-danger">*</span></label>
-                    <input type="datetime-local" @bind="_model.EndDate" class="form-control" />
+                    <label class="form-label fw-bold text-dark">End Date & Time <span class="text-danger">*</span></label>
+                    <input type="datetime-local" @bind="_model.EndDate" class="form-control py-2" />
                     <ValidationMessage For="@(() => _model.EndDate)" class="text-danger small" />
                 </div>
             </div>
 
-            <!-- ✅ MULTI-VENUE UI: select one or more venues, pick one as primary -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Venues</label>
-                <small class="text-muted d-block mb-2">
-                    Select one or more venues (the brief requires "various Venues" — M:N).
-                    One must be marked as Primary.
+            <!-- M:N Venues Console with Inline Quick-Add -->
+            <div class="mb-5">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="form-label fw-bold text-dark mb-0">Venues</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm d-flex align-items-center" @onclick="() => _showAddVenue = !_showAddVenue">
+                        <i class="bi bi-plus-lg me-1"></i> Quick Add Venue
+                    </button>
+                </div>
+                <small class="text-muted d-block mb-3">
+                    Select one or more venues (M:N compliant). One must be marked as Primary.
                 </small>
-                <div class="border rounded p-3" style="max-height: 240px; overflow-y: auto;">
+
+                @if (_showAddVenue)
+                {
+                    <div class="p-4 bg-light border rounded-4 my-3 shadow-sm">
+                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                            <i class="bi bi-geo-alt text-danger me-2"></i> Quick Add Custom Venue
+                        </h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Venue Name</label>
+                                <input @bind="_newVenueName" class="form-control py-2" placeholder="e.g. Community Civic Hall" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Address</label>
+                                <input @bind="_newVenueAddress" class="form-control py-2" placeholder="e.g. 100 Main Street" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">City</label>
+                                <input @bind="_newVenueCity" class="form-control py-2" placeholder="e.g. Sunderland" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Max Capacity</label>
+                                <input type="number" @bind="_newVenueCapacity" class="form-control py-2" placeholder="e.g. 150" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary fw-bold px-4 py-2 shadow-sm" @onclick="QuickAddVenueAsync">
+                                Save Venue
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 shadow-sm" @onclick="() => _showAddVenue = false">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <div class="border rounded-4 p-4 bg-slate-50 shadow-sm" style="max-height: 280px; overflow-y: auto;">
                     @if (_venues != null)
                     {
                         @foreach (var venue in _venues)
                         {
                             var isSelected = _model.SelectedVenueIds.Contains(venue.Id);
-                            <div class="form-check mb-2">
+                            <div class="form-check mb-3 p-3 bg-white border rounded-3 shadow-sm d-flex align-items-center">
                                 <input type="checkbox"
-                                       class="form-check-input"
+                                       class="form-check-input ms-1 me-3 mt-0"
                                        id="venue_@venue.Id"
                                        checked="@isSelected"
-                                       disabled="@(!isSelected && _model.SelectedVenueIds.Count == 0 && venue.MaxCapacity < 100)"
                                        @onchange="e => ToggleVenue(venue.Id, (bool)e.Value!)" />
-                                <label class="form-check-label" for="venue_@venue.Id">
-                                    <strong>@venue.Name</strong>
-                                    <small class="text-muted">
-                                        — @venue.City
-                                        (Capacity: @venue.MaxCapacity)
-                                    </small>
+                                <label class="form-check-label flex-grow-1" for="venue_@venue.Id">
+                                    <strong class="text-dark">@venue.Name</strong>
+                                    <span class="text-muted small ms-1">— @venue.City (Capacity: @venue.MaxCapacity)</span>
                                     @if (isSelected)
                                     {
-                                        <span class="badge bg-primary ms-2">Selected</span>
+                                        <span class="badge bg-primary ms-3 shadow-sm px-2 py-1 rounded-pill">Selected</span>
                                         @if (_model.PrimaryVenueId == venue.Id)
                                         {
-                                            <span class="badge bg-warning ms-1">Primary</span>
+                                            <span class="badge bg-success ms-2 shadow-sm px-2 py-1 rounded-pill">Primary</span>
                                         }
                                         else
                                         {
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-warning ms-2"
+                                                    class="btn btn-sm btn-outline-secondary ms-3 py-1 px-3 fw-bold shadow-sm"
                                                     @onclick="() => SetPrimary(venue.Id)">
                                                 Make Primary
                                             </button>
@@ -112,31 +162,80 @@ else
                 </div>
                 @if (_model.SelectedVenueIds.Count == 0)
                 {
-                    <small class="text-muted">No venues selected. Select at least one above.</small>
+                    <small class="text-danger small fw-bold mt-2 d-block">No venues selected. Select at least one venue above.</small>
                 }
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Activities</label>
-                <small class="text-muted d-block mb-2">
-                    Select which activities belong to this event (workshop, talk, game, etc.)
+            <!-- Activities Console with Inline Quick-Add -->
+            <div class="mb-5">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="form-label fw-bold text-dark mb-0">Activities</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm d-flex align-items-center" @onclick="() => _showAddActivity = !_showAddActivity">
+                        <i class="bi bi-plus-lg me-1"></i> Quick Add Activity
+                    </button>
+                </div>
+                <small class="text-muted d-block mb-3">
+                    Select which activities belong to this event schedule (Workshops, Talks, Games, etc.)
                 </small>
-                <div class="border rounded p-3" style="max-height: 240px; overflow-y: auto;">
+
+                @if (_showAddActivity)
+                {
+                    <div class="p-4 bg-light border rounded-4 my-3 shadow-sm">
+                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                            <i class="bi bi-lightning-charge text-warning me-2"></i> Quick Add Custom Activity
+                        </h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Activity Name</label>
+                                <input @bind="_newActivityName" class="form-control py-2" placeholder="e.g. Expert Panel Q&A" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Activity Type</label>
+                                <select @bind="_newActivityType" class="form-select py-2">
+                                    @foreach (var type in Enum.GetValues<ActivityType>())
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Description</label>
+                                <input @bind="_newActivityDescription" class="form-control py-2" placeholder="e.g. An interactive discussion with industry experts" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Duration (Minutes)</label>
+                                <input type="number" @bind="_newActivityDuration" class="form-control py-2" placeholder="e.g. 60" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary fw-bold px-4 py-2 shadow-sm" @onclick="QuickAddActivityAsync">
+                                Save Activity
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 shadow-sm" @onclick="() => _showAddActivity = false">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <div class="border rounded-4 p-4 bg-slate-50 shadow-sm" style="max-height: 280px; overflow-y: auto;">
                     @if (_activities != null)
                     {
                         @foreach (var activity in _activities)
                         {
                             var isSelected = _model.SelectedActivityIds.Contains(activity.Id);
-                            <div class="form-check mb-2">
+                            <div class="form-check mb-3 p-3 bg-white border rounded-3 shadow-sm d-flex align-items-center">
                                 <input type="checkbox"
-                                       class="form-check-input"
+                                       class="form-check-input ms-1 me-3 mt-0"
                                        id="act_@activity.Id"
                                        checked="@isSelected"
                                        @onchange="e => ToggleActivity(activity.Id, (bool)e.Value!)" />
-                                <label class="form-check-label" for="act_@activity.Id">
-                                    @activity.Name
-                                    <span class="badge bg-light text-dark ms-2">@activity.TypeName</span>
-                                    <small class="text-muted">(@activity.DurationFormatted)</small>
+                                <label class="form-check-label flex-grow-1 d-flex align-items-center justify-content-between" for="act_@activity.Id">
+                                    <div>
+                                        <strong class="text-dark">@activity.Name</strong>
+                                        <span class="badge bg-secondary ms-2 px-2 py-1 rounded-pill shadow-sm">@activity.TypeName</span>
+                                    </div>
+                                    <small class="text-muted fw-bold"><i class="bi bi-clock me-1 opacity-75"></i> @activity.DurationFormatted</small>
                                 </label>
                             </div>
                         }
@@ -144,15 +243,19 @@ else
                 </div>
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
+            <div class="d-flex gap-3 pt-3 border-top">
+                <button type="submit" class="btn btn-primary btn-lg fw-bold px-5 shadow-sm" disabled="@_isSubmitting">
                     @if (_isSubmitting)
                     {
                         <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Constructing Schedule...</span>
                     }
-                    Create Event
+                    else
+                    {
+                        <span>Create Event</span>
+                    }
                 </button>
-                <a href="/events" class="btn btn-outline-secondary">Cancel</a>
+                <a href="/events" class="btn btn-outline-secondary btn-lg fw-bold px-5 shadow-sm">Cancel</a>
             </div>
         </EditForm>
     </div>
@@ -165,6 +268,20 @@ else
     private List<ActivityViewModel> _activities = new();
     private bool _isSubmitting = false;
     private string _errorMessage = string.Empty;
+
+    // Inline Quick-Add Venue Properties
+    private bool _showAddVenue = false;
+    private string _newVenueName = string.Empty;
+    private string _newVenueAddress = string.Empty;
+    private string _newVenueCity = string.Empty;
+    private int _newVenueCapacity = 150;
+
+    // Inline Quick-Add Activity Properties
+    private bool _showAddActivity = false;
+    private string _newActivityName = string.Empty;
+    private string _newActivityDescription = string.Empty;
+    private ActivityType _newActivityType = ActivityType.Workshop;
+    private int _newActivityDuration = 60;
 
     protected override async Task OnInitializedAsync()
     {
@@ -188,19 +305,79 @@ else
         }
     }
 
+    private async Task QuickAddVenueAsync()
+    {
+        try
+        {
+            _errorMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(_newVenueName) || string.IsNullOrWhiteSpace(_newVenueAddress) || string.IsNullOrWhiteSpace(_newVenueCity))
+            {
+                _errorMessage = "Please fill out all required venue fields.";
+                return;
+            }
+
+            var venue = await VenueService.CreateVenueAsync(_newVenueName, _newVenueAddress, _newVenueCity, _newVenueCapacity);
+            var vm = VenueViewModel.FromEntity(venue);
+            _venues.Add(vm);
+
+            // Auto-select the newly created venue
+            _model.SelectedVenueIds.Add(venue.Id);
+            _model.PrimaryVenueId = venue.Id;
+
+            // Reset form
+            _showAddVenue = false;
+            _newVenueName = string.Empty;
+            _newVenueAddress = string.Empty;
+            _newVenueCity = string.Empty;
+            _newVenueCapacity = 150;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to create custom venue: {ex.Message}";
+        }
+    }
+
+    private async Task QuickAddActivityAsync()
+    {
+        try
+        {
+            _errorMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(_newActivityName))
+            {
+                _errorMessage = "Activity name is required.";
+                return;
+            }
+
+            var act = await ActivityService.CreateActivityAsync(_newActivityName, _newActivityDescription, _newActivityType, _newActivityDuration);
+            var vm = ActivityViewModel.FromEntity(act);
+            _activities.Add(vm);
+
+            // Auto-select the newly created activity
+            _model.SelectedActivityIds.Add(act.Id);
+
+            // Reset form
+            _showAddActivity = false;
+            _newActivityName = string.Empty;
+            _newActivityDescription = string.Empty;
+            _newActivityDuration = 60;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to create custom activity: {ex.Message}";
+        }
+    }
+
     private void ToggleVenue(int venueId, bool isChecked)
     {
         if (isChecked && !_model.SelectedVenueIds.Contains(venueId))
         {
             _model.SelectedVenueIds.Add(venueId);
-            // If this is the first venue, make it primary automatically
             if (_model.SelectedVenueIds.Count == 1)
                 _model.PrimaryVenueId = venueId;
         }
         else if (!isChecked)
         {
             _model.SelectedVenueIds.Remove(venueId);
-            // If we removed the primary, set a new one
             if (_model.PrimaryVenueId == venueId)
             {
                 _model.PrimaryVenueId = _model.SelectedVenueIds.FirstOrDefault();
@@ -230,7 +407,6 @@ else
             _isSubmitting = true;
             _errorMessage = string.Empty;
 
-            // Validate: at least one venue selected, exactly one primary
             if (_model.SelectedVenueIds.Count == 0)
             {
                 _errorMessage = "Please select at least one venue.";
