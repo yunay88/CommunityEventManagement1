@@ -5,11 +5,6 @@ using FluentAssertions;
 
 namespace CommunityEventManagement.Tests.Unit.Domain;
 
-/// <summary>
-/// Tests the Registration state machine:
-/// Pending → Confirmed → Cancelled
-/// Pending → Waitlisted → Confirmed
-/// </summary>
 public class RegistrationTests
 {
     [Fact]
@@ -34,10 +29,10 @@ public class RegistrationTests
     public void Confirm_FromConfirmed_NoOp()
     {
         var reg = new Registration(1, 1);
-        reg.Confirm();  // Pending → Confirmed
+        reg.Confirm(); 
         var beforeChangedAt = reg.StatusChangedAt;
 
-        reg.Confirm();  // Confirmed → Confirmed (no change)
+        reg.Confirm();  
 
         reg.Status.Should().Be(RegistrationStatus.Confirmed);
         reg.StatusChangedAt.Should().Be(beforeChangedAt);

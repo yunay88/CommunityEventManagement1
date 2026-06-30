@@ -3,16 +3,7 @@ using CommunityEventManagement.Domain.Enums;
 
 namespace CommunityEventManagement.Domain.Entities
 {
-    /// <summary>
-    /// Activity entity — a specific activity within an event.
-    /// Examples: Workshop, Talk, Game, Performance.
-    /// Inheritance: Activity → BaseEntity
-    /// 
-    /// Demonstrates:
-    ///   - Encapsulation with private setters
-    ///   - Computed methods (GetFormattedDuration)
-    ///   - DataAnnotation validation
-    /// </summary>
+    
     public class Activity : BaseEntity
     {
         [Required(ErrorMessage = "Activity name is required")]

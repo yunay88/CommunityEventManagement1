@@ -8,10 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityEventManagement.Tests.Components;
 
-/// <summary>
-/// bUnit tests for the Login Blazor component — tests rendering,
-/// form interaction, and validation.
-/// </summary>
+
 public class LoginComponentTests : TestContext
 {
     public LoginComponentTests()
@@ -25,7 +22,7 @@ public class LoginComponentTests : TestContext
     {
         var cut = RenderComponent<Login>();
 
-        cut.Find("h4").TextContent.Should().Contain("Sign In");
+        cut.Find("h2").TextContent.Should().Contain("Sign In");
 
         // Email input — accept either Blazor InputText (type=text) or plain <input type="email">
         cut.FindAll("input").Where(i =>
@@ -58,10 +55,7 @@ public class LoginComponentTests : TestContext
         cut.Find("input[type='password']").Should().NotBeNull();
         cut.Find("button[type='submit']").Should().NotBeNull();
     }
-    /// <summary>
-    /// Fake AuthStateService — returns false from LoginAsync so we don't
-    /// need to set up a full DB.
-    /// </summary>
+
     private class FakeAuthStateService : AuthStateService
     {
         public FakeAuthStateService() : base(null!, null!) { }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CommunityEventManagement.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07ec99c6d72604607aef22b89ba45ad0b8c4ebb5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e8d61215f07d102234bb58ddd411789de119ad19")]
 [assembly: System.Reflection.AssemblyProductAttribute("CommunityEventManagement.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CommunityEventManagement.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

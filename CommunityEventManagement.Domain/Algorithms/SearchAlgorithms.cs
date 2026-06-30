@@ -1,38 +1,9 @@
 namespace CommunityEventManagement.Domain.Algorithms
 {
-    /// <summary>
-    /// Implements searching algorithms for use throughout the application.
-    /// 
-    /// BINARY SEARCH:
-    ///   - Time Complexity: O(log n) — much faster than linear O(n) for large lists
-    ///   - Requirement: list must be SORTED before searching
-    ///   - How it works: repeatedly halves the search space
-    ///     1. Look at the middle element
-    ///     2. If it matches → found
-    ///     3. If target is smaller → search left half only
-    ///     4. If target is larger → search right half only
-    ///     5. Repeat until found or search space is empty
-    /// 
-    /// Demonstrates:
-    ///   - Generic method with type constraint
-    ///   - Static utility class
-    ///   - Algorithm implementation with documented complexity
-    /// </summary>
+
     public static class SearchAlgorithms
     {
-        /// <summary>
-        /// Binary Search — finds an item in a SORTED list by integer key.
-        /// Generic method works with any type T.
-        /// 
-        /// Time Complexity: O(log n)
-        /// Space Complexity: O(1)
-        /// 
-        /// Returns: index of found item, or -1 if not found.
-        /// </summary>
-        /// <typeparam name="T">The type of items in the list</typeparam>
-        /// <param name="sortedList">A sorted list to search through</param>
-        /// <param name="target">The integer key value to find</param>
-        /// <param name="keySelector">Function that extracts the key from an item</param>
+       
         public static int BinarySearch<T>(
             IList<T> sortedList,
             int target,
@@ -73,12 +44,7 @@ namespace CommunityEventManagement.Domain.Algorithms
             return -1;
         }
 
-        /// <summary>
-        /// Binary Search overload — searches by string key.
-        /// Demonstrates: method overloading on algorithms.
-        /// 
-        /// Time Complexity: O(log n)
-        /// </summary>
+       
         public static int BinarySearch<T>(
             IList<T> sortedList,
             string target,
@@ -119,11 +85,7 @@ namespace CommunityEventManagement.Domain.Algorithms
             return -1;
         }
 
-        /// <summary>
-        /// Linear Search — fallback for unsorted lists.
-        /// Time Complexity: O(n)
-        /// Included for comparison with Binary Search performance.
-        /// </summary>
+        
         public static int LinearSearch<T>(
             IList<T> list,
             int target,
@@ -141,10 +103,7 @@ namespace CommunityEventManagement.Domain.Algorithms
             return -1;
         }
 
-        /// <summary>
-        /// Finds an item directly by its integer key using Binary Search.
-        /// Returns the item itself (not the index).
-        /// </summary>
+       
         public static T? FindById<T>(
             IList<T> sortedList,
             int id,
