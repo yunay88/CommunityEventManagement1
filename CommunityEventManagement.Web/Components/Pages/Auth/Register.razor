@@ -18,8 +18,9 @@
 
                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
-                    <div class="alert alert-danger mb-4" role="alert">
-                        @_errorMessage
+                    <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <div>@_errorMessage</div>
                     </div>
                 }
 
@@ -40,7 +41,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Email Address</label>
+                        <label class="form-label">Email Address <span class="text-danger">*</span></label>
                         <input type="email" @bind="_model.Email" class="form-control py-2" placeholder="you@example.com" />
                         <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
                     </div>
@@ -52,13 +53,13 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Password</label>
+                        <label class="form-label">Password <span class="text-danger">*</span></label>
                         <input type="password" @bind="_model.Password" class="form-control py-2" placeholder="At least 6 characters" />
                         <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
                     </div>
 
                     <div class="mb-5">
-                        <label class="form-label">Confirm Password</label>
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
                         <input type="password" @bind="_model.ConfirmPassword" class="form-control py-2" placeholder="Re-enter password" />
                         <ValidationMessage For="@(() => _model.ConfirmPassword)" class="text-danger small" />
                     </div>
@@ -133,9 +134,11 @@
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Enter a valid email address")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } = string.Empty;
 
         [Phone(ErrorMessage = "Enter a valid phone number")]
+        [RegularExpression(@"^\+?[0-9]{5,15}$", ErrorMessage = "Phone number must contain 5 to 15 digits (e.g., +447700900077 or 07700900077).")]
         public string? PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Password is required")]

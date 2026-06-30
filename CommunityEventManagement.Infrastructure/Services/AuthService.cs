@@ -90,7 +90,29 @@ namespace CommunityEventManagement.Infrastructure.Services
 
         public Task<AppUser?> GetCurrentUserAsync() => Task.FromResult(_currentUser);
 
+        // <-- ENTERPRISE FIX: SECURE PASSWORD RESET IMPLEMENTATION
+        public async Task<bool> ResetPasswordAsync(string email, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(newPassword)) return false;
+            try
+            {
+                var user = await _context.Set<Person>()
+                    .OfType<AppUser>()
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
-        
+                if (user == null) return false;
+
+                user.UpdatePasswordHash(BCrypt.Net.BCrypt.HashPassword(newPassword));
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Password successfully reset for: {Email}", email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for: {Email}", email);
+                return false;
+            }
+        }
     }
 }

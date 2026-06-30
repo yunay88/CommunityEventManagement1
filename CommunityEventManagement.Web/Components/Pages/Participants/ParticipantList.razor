@@ -1,12 +1,13 @@
 @page "/participants"
+@using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Web.ViewModels
 @inject IParticipantService ParticipantService
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<PageTitle>Participants</PageTitle>
+<PageTitle>Participant Accounts Console — Community Events</PageTitle>
 
-@* Admin-only: redirect if not admin *@
 @code {
     protected override void OnInitialized()
     {
@@ -24,110 +25,122 @@
 
 @if (AuthState.IsAdmin)
 {
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="fw-bold mb-0">Participants</h2>
-    <a href="/participants/create" class="btn btn-primary">Add Participant</a>
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Participant Accounts Console</h1>
+        <p class="text-muted small mb-0">System administrative portal for tracking accounts, creating members, and searching contact records.</p>
+    </div>
+    <a href="/participants/create" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+        <i class="bi bi-person-plus-fill me-2"></i> Add Participant
+    </a>
 </div>
 
-@if (!string.IsNullOrEmpty(_successMessage))
-{
-    <div class="alert alert-success alert-dismissible fade show">
-        @_successMessage
-        <button type="button" class="btn-close" @onclick="() => _successMessage = string.Empty"></button>
-    </div>
-}
-@if (!string.IsNullOrEmpty(_errorMessage))
-{
-    <div class="alert alert-danger alert-dismissible fade show">
-        @_errorMessage
-        <button type="button" class="btn-close" @onclick="() => _errorMessage = string.Empty"></button>
-    </div>
-}
+<div class="container pb-5">
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <div class="alert alert-success mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div><strong>Success:</strong> @_successMessage</div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Error:</strong> @_errorMessage</div>
+        </div>
+    }
 
-<div class="card mb-3">
-    <div class="card-body py-2">
-        <input class="form-control" placeholder="Search participants..."
-               @bind="_searchTerm" @bind:event="oninput" />
-    </div>
-</div>
-
-@if (_isLoading)
-{
-    <p class="text-muted">Loading participants...</p>
-}
-else
-{
-    var filtered = string.IsNullOrWhiteSpace(_searchTerm)
-        ? _participants
-        : _participants.Where(p =>
-            p.FullName.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            p.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
-
-    <div class="card">
-        <div class="card-body">
-            <p class="text-muted small mb-2">@filtered.Count participant(s)</p>
-            @if (!filtered.Any())
+    <!-- Modern Live Search Bar Console -->
+    <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <div class="d-flex align-items-center mb-1">
+            <i class="bi bi-search text-primary me-3 fs-5"></i>
+            <div class="flex-grow-1">
+                <input class="form-control border-0 bg-slate-50 py-2 shadow-none fw-medium text-dark" placeholder="Type name, email, or phone number ..."
+                       @bind="_searchTerm" @bind:event="oninput" />
+            </div>
+            @if (!string.IsNullOrEmpty(_searchTerm))
             {
-                <p class="text-muted">No participants found.</p>
-            }
-            else
-            {
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Registrations</th>
-                            <th>Joined</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var p in filtered)
-                        {
-                            <tr>
-                                <td class="fw-semibold">@p.FullName</td>
-                                <td>@p.Email</td>
-                                <td>@(p.PhoneNumber ?? "—")</td>
-                                <td>@p.ActiveRegistrations</td>
-                                <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                <td class="text-end">
-                                    <a href="/participants/@p.Id"
-                                       class="btn btn-sm btn-outline-secondary">View</a>
-                                    <a href="/participants/edit/@p.Id"
-                                       class="btn btn-sm btn-outline-secondary">Edit</a>
-                                    <button class="btn btn-sm btn-outline-danger"
-                                            @onclick="() => ShowDelete(p.Id, p.FullName)">
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <button class="btn btn-sm btn-outline-secondary py-1 px-3 ms-3 fw-bold shadow-sm" @onclick="() => _searchTerm = string.Empty">Clear</button>
             }
         </div>
     </div>
-}
 
-<ConfirmDialog IsVisible="@_showDelete"
-               Title="Delete Participant"
-               Message="@($"Delete '{_deleteName}'? Their registrations will also be removed. This cannot be undone.")"
-               ConfirmText="Delete"
-               OnConfirm="ConfirmDelete"
-               OnCancel="@(() => _showDelete = false)" />
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else if (!_filteredParticipants.Any())
+    {
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-people display-4 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold text-dark mb-1">No matching participant accounts</h4>
+            <p class="text-muted mb-4">No registered participant records match your active search criteria.</p>
+            <a href="/participants/create" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">Create Account</a>
+        </div>
+    }
+    else
+    {
+        <div class="modern-container card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-5">
+            <div class="p-4 border-bottom bg-slate-50 d-flex justify-content-between align-items-center">
+                <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                    <i class="bi bi-person-lines-fill text-primary me-2"></i> Participant Directory
+                </h2>
+                <span class="badge bg-secondary px-3 py-1 rounded-pill shadow-sm">@_filteredParticipants.Count active account(s)</span>
+            </div>
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Full Name</th>
+                        <th>Email Address</th>
+                        <th>Phone Number</th>
+                        <th>Confirmed Bookings</th>
+                        <th>Date Created</th>
+                        <th class="pe-4 text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in _filteredParticipants)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">
+                                <a href="/participants/@p.Id" class="text-primary text-decoration-none">@p.FullName</a>
+                            </td>
+                            <td class="text-secondary fw-medium">@p.Email</td>
+                            <td class="text-secondary fw-medium">@(string.IsNullOrEmpty(p.PhoneNumber) ? "—" : p.PhoneNumber)</td>
+                            <td>
+                                <span class="badge bg-primary px-3 py-1 rounded-pill shadow-sm fs-6">@p.ActiveRegistrations</span>
+                            </td>
+                            <td class="text-muted">@p.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td class="pe-4 text-end">
+                                <a href="/participants/@p.Id" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm me-1">View</a>
+                                <a href="/participants/edit/@p.Id" class="btn btn-sm btn-outline-secondary py-1 px-3 fw-bold shadow-sm">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 }
 
 @code {
     private List<ParticipantViewModel> _participants = new();
-    private string _searchTerm = string.Empty;
     private bool _isLoading = true;
-    private bool _showDelete = false;
-    private int _deleteId;
-    private string _deleteName = string.Empty;
+    private string _searchTerm = string.Empty;
     private string _successMessage = string.Empty;
     private string _errorMessage = string.Empty;
+
+    private List<ParticipantViewModel> _filteredParticipants => string.IsNullOrWhiteSpace(_searchTerm)
+        ? _participants
+        : _participants.Where(p => 
+            p.FullName.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            p.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (p.PhoneNumber != null && p.PhoneNumber.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+          ).ToList();
 
     private async void AuthChanged() => await InvokeAsync(StateHasChanged);
 
@@ -139,27 +152,15 @@ else
             var all = await ParticipantService.GetAllParticipantsAsync();
             _participants = all.Select(ParticipantViewModel.FromEntity).ToList();
         }
-        catch (Exception ex) { _errorMessage = $"Error: {ex.Message}"; }
-        finally { _isLoading = false; }
-    }
-
-    private void ShowDelete(int id, string name)
-    {
-        _deleteId = id;
-        _deleteName = name;
-        _showDelete = true;
-    }
-
-    private async Task ConfirmDelete()
-    {
-        try
+        catch (Exception ex)
         {
-            _showDelete = false;
-            await ParticipantService.DeleteParticipantAsync(_deleteId);
-            _successMessage = $"Participant '{_deleteName}' deleted.";
-            await LoadAsync();
+            _errorMessage = $"Failed to load participants: {ex.Message}";
         }
-        catch (Exception ex) { _errorMessage = ex.Message; }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
     public void Dispose() => AuthState.OnAuthStateChanged -= AuthChanged;

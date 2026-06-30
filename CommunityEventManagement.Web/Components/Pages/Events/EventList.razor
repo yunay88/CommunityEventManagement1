@@ -14,7 +14,7 @@
 <div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
     <div>
         <h1 class="h3 fw-bold text-dark mb-1">Events Catalog</h1>
-        <p class="text-muted small mb-0">Explore, search, and filter upcoming community events.</p>
+        <p class="text-muted small mb-0">Explore, search, and filter upcoming community events with real-time instant search.</p>
     </div>
     @if (AuthState.IsAdmin)
     {
@@ -28,33 +28,33 @@
     <AlertMessage Message="@_successMessage" Type="success" OnDismissed="@(() => _successMessage = string.Empty)" />
     <AlertMessage Message="@_errorMessage" Type="danger" OnDismissed="@(() => _errorMessage = string.Empty)" />
 
-    <!-- Modern Filter Console -->
+    <!-- Modern Live Filter Console (Streamlined Grid without Redundant Button) -->
     <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
         <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
             <i class="bi bi-funnel text-primary me-2 fs-5"></i>
-            <h6 class="mb-0 fw-bold text-dark">Filter Specifications</h6>
+            <h6 class="mb-0 fw-bold text-dark">Filter Specifications (Real-Time Search)</h6>
         </div>
         <div class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label small fw-bold text-muted mb-1">Search</label>
                 <div class="input-group">
                     <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input class="form-control border-start-0 ps-0" placeholder="Search events..."
-                           @bind="_filter.SearchTerm"
-                           @bind:event="oninput" />
+                    <input class="form-control border-start-0 ps-0" placeholder="Search ..."
+                           value="@_filter.SearchTerm"
+                           @oninput="HandleLiveSearchAsync" />
                 </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold text-muted mb-1">From Date</label>
-                <input type="date" class="form-control" @bind="_filter.StartDate" />
+                <input type="date" class="form-control" value="@_filter.StartDate?.ToString("yyyy-MM-dd")" @onchange="HandleStartDateChangedAsync" />
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold text-muted mb-1">To Date</label>
-                <input type="date" class="form-control" @bind="_filter.EndDate" />
+                <input type="date" class="form-control" value="@_filter.EndDate?.ToString("yyyy-MM-dd")" @onchange="HandleEndDateChangedAsync" />
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold text-muted mb-1">Venue</label>
-                <select class="form-select" @bind="_filter.VenueId">
+                <select class="form-select" value="@_filter.VenueId" @onchange="HandleVenueChangedAsync">
                     <option value="">All venues</option>
                     @foreach (var venue in _venues)
                     {
@@ -64,18 +64,13 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold text-muted mb-1">Activity Type</label>
-                <select class="form-select" @bind="_filter.ActivityType">
+                <select class="form-select" value="@_filter.ActivityType" @onchange="HandleActivityTypeChangedAsync">
                     <option value="">All types</option>
-                    @foreach (var type in Enum.GetValues<ActivityType>())
+                    @foreach (var type in Enum.GetValues<CommunityEventManagement.Domain.Enums.ActivityType>())
                     {
                         <option value="@type">@type</option>
                     }
                 </select>
-            </div>
-            <div class="col-md-1">
-                <button class="btn btn-primary w-100 py-2 fw-bold shadow-sm d-flex align-items-center justify-content-center" @onclick="ApplyFilter">
-                    <i class="bi bi-arrow-right fs-5"></i>
-                </button>
             </div>
         </div>
         @if (_filter.HasFilters)
@@ -212,7 +207,42 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
+    }
+
+    private async Task HandleLiveSearchAsync(ChangeEventArgs e)
+    {
+        _filter.SearchTerm = e.Value?.ToString();
+        await LoadDataAsync();
+    }
+
+    private async Task HandleStartDateChangedAsync(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var dt)) _filter.StartDate = dt;
+        else _filter.StartDate = null;
+        await LoadDataAsync();
+    }
+
+    private async Task HandleEndDateChangedAsync(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var dt)) _filter.EndDate = dt;
+        else _filter.EndDate = null;
+        await LoadDataAsync();
+    }
+
+    private async Task HandleVenueChangedAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var vId)) _filter.VenueId = vId;
+        else _filter.VenueId = null;
+        await LoadDataAsync();
+    }
+
+    private async Task HandleActivityTypeChangedAsync(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<CommunityEventManagement.Domain.Enums.ActivityType>(e.Value?.ToString(), out var at)) _filter.ActivityType = at;
+        else _filter.ActivityType = null;
+        await LoadDataAsync();
     }
 
     private async Task ApplyFilter() => await LoadDataAsync();

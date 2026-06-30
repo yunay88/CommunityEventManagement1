@@ -393,7 +393,7 @@
     "Type": "WaitlistPromoted",
     "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T18:04:22.232679Z",
-    "IsRead": false
+    "IsRead": true
   },
   {
     "Id": "f8a5bf3c-59a5-4db8-9129-0e189f49b00e",
@@ -404,7 +404,7 @@
     "Type": "WaitlistPromoted",
     "ForAdminOnly": true,
     "CreatedAt": "2026-06-30T18:04:22.235283Z",
-    "IsRead": false
+    "IsRead": true
   },
   {
     "Id": "f15acc5d-6de3-40bc-93c9-eb9dfd697e5f",
@@ -415,6 +415,127 @@
     "Type": "RegistrationConfirmed",
     "ForAdminOnly": false,
     "CreatedAt": "2026-06-30T18:19:14.943141Z",
-    "IsRead": false
+    "IsRead": true
+  },
+  {
+    "Id": "f58eacd9-8134-41f1-a69a-8579756fb6df",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Coding\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:29:14.726424Z",
+    "IsRead": true
+  },
+  {
+    "Id": "60c78266-2e6f-490e-aac4-636a1f000ee2",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 at BCCI HALL has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:29:49.897199Z",
+    "IsRead": true
+  },
+  {
+    "Id": "72d3daaa-6c51-4a9d-bcd2-8b85a827b58b",
+    "ParticipantId": 10,
+    "EventId": 11,
+    "Title": "Waitlist Promoted",
+    "Message": "Great news! A space opened up and your registration for \u0027Coding\u0027 at BCCI HALL has been successfully confirmed.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:30:44.182466Z",
+    "IsRead": true
+  },
+  {
+    "Id": "83e22b8c-c4a6-4c2f-8ef4-3941c202254b",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Added to Waitlist",
+    "Message": "\u0027Coding\u0027 at BCCI HALL is currently at capacity. You have been placed on the waitlist queue.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:31:32.844748Z",
+    "IsRead": true
+  },
+  {
+    "Id": "9a5add7f-101d-429c-939c-521a01786940",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Waitlist Queue Alert",
+    "Message": "Participant \u0027Ram Hero\u0027 has joined the waitlist for \u0027Coding\u0027 at BCCI HALL. Action required in the registration console.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": true,
+    "CreatedAt": "2026-06-30T18:31:32.850189Z",
+    "IsRead": true
+  },
+  {
+    "Id": "3faf5484-68c3-4e85-a444-fc9793171725",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 at BCCI HALL has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:31:35.201056Z",
+    "IsRead": true
+  },
+  {
+    "Id": "3bc9f43d-3ca0-43c2-96f0-91f5b6417d9b",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Event Schedule Modified",
+    "Message": "Specifications for \u0027Coding\u0027 have been updated by the organizer. Review the latest changes.",
+    "Type": "EventUpdated",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:33:57.122161Z",
+    "IsRead": true
+  },
+  {
+    "Id": "d6aa7f18-b606-4619-b74e-14fcb356469e",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Re-Confirmed",
+    "Message": "Your cancelled reservation for \u0027Coding\u0027 at Online Platform has been successfully reactivated.",
+    "Type": "RegistrationConfirmed",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:42:04.022418Z",
+    "IsRead": true
+  },
+  {
+    "Id": "e9765e1b-06c7-40e0-9d6b-8fef8e61a31e",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Registration Cancelled",
+    "Message": "Your registration for \u0027Coding\u0027 at Online Platform has been cancelled.",
+    "Type": "RegistrationCancelled",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:42:35.499791Z",
+    "IsRead": true
+  },
+  {
+    "Id": "a75e7d35-5b57-463d-a25b-2acce60cfbbe",
+    "ParticipantId": 11,
+    "EventId": 11,
+    "Title": "Added to Waitlist",
+    "Message": "\u0027Coding\u0027 at BCCI HALL is currently at capacity. You have been placed on the waitlist queue.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": false,
+    "CreatedAt": "2026-06-30T18:42:38.336244Z",
+    "IsRead": true
+  },
+  {
+    "Id": "ceaea7d8-c287-448b-ab7b-e16b1ff4d8fe",
+    "ParticipantId": null,
+    "EventId": 11,
+    "Title": "Waitlist Queue Alert",
+    "Message": "Participant \u0027Ram Hero\u0027 has joined the waitlist for \u0027Coding\u0027 at BCCI HALL. Action required in the registration console.",
+    "Type": "WaitlistPromoted",
+    "ForAdminOnly": true,
+    "CreatedAt": "2026-06-30T18:42:38.340859Z",
+    "IsRead": true
   }
 ]

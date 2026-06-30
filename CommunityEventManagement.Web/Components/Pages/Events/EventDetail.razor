@@ -1,5 +1,6 @@
 @page "/events/{Id:int}"
 @using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Web.ViewModels
 @inject IEventService EventService
 @inject IRegistrationService RegistrationService
 @inject IParticipantService ParticipantService
@@ -65,11 +66,20 @@
     }
     else
     {
-        var primaryVenue = _event.Venues?.FirstOrDefault(v => v.IsPrimary) ?? _event.Venues?.FirstOrDefault();
-        var confirmedCount = _event.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed) ?? 0;
-        var maxCapacity = primaryVenue?.Capacity ?? int.MaxValue;
-        var availableSeats = Math.Max(0, maxCapacity - confirmedCount);
-        var isEventFull = primaryVenue != null && availableSeats == 0;
+        var activeSelectedVenue = _event.Venues?.FirstOrDefault(v => v.Id == _selectedVenueId) ?? _event.Venues?.FirstOrDefault();
+        var isSelectedVenueFull = false;
+        var selectedVenueAvailableSeats = 0;
+
+        if (activeSelectedVenue != null)
+        {
+            var vConf = _event.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && r.Notes != null && r.Notes.Contains($"SelectedVenueId:{activeSelectedVenue.Id}")) ?? 0;
+            if (vConf == 0 && _event.Registrations?.Any(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && (r.Notes == null || !r.Notes.StartsWith("SelectedVenueId:"))) == true && activeSelectedVenue.IsPrimary)
+            {
+                vConf = _event.Registrations.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed);
+            }
+            selectedVenueAvailableSeats = Math.Max(0, activeSelectedVenue.Capacity - vConf);
+            isSelectedVenueFull = selectedVenueAvailableSeats == 0;
+        }
 
         <div class="row g-5">
             <!-- Main Content Grid -->
@@ -109,7 +119,13 @@
                             <dd class="col-sm-9 text-dark mb-0">
                                 @foreach (var v in _event.Venues)
                                 {
-                                    var vAvailable = Math.Max(0, v.Capacity - confirmedCount);
+                                    var vConfirmed = _event.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && r.Notes != null && r.Notes.Contains($"SelectedVenueId:{v.Id}")) ?? 0;
+                                    if (vConfirmed == 0 && _event.Registrations?.Any(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && (r.Notes == null || !r.Notes.StartsWith("SelectedVenueId:"))) == true && v.IsPrimary)
+                                    {
+                                        vConfirmed = _event.Registrations.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed);
+                                    }
+                                    var vAvailable = Math.Max(0, v.Capacity - vConfirmed);
+
                                     <div class="mb-3 p-4 bg-slate-50 border rounded-4 shadow-sm">
                                         <div class="d-flex align-items-center justify-content-between mb-2">
                                             <strong class="text-dark fs-6">
@@ -122,7 +138,7 @@
                                         </div>
                                         <div class="text-muted small mb-2 fw-medium"><i class="bi bi-geo text-secondary me-1"></i> @v.Location</div>
                                         <div class="pt-2 border-top d-flex justify-content-between text-secondary small fw-bold">
-                                            <span>Available Seats for this Event</span>
+                                            <span>Available Seats for this Venue</span>
                                             <span>@(vAvailable == 0 ? $"Fully Booked (0 available out of {v.Capacity})" : $"{vAvailable} available out of {v.Capacity}")</span>
                                         </div>
                                     </div>
@@ -173,7 +189,8 @@
                                 <tr>
                                     <th class="ps-4">Participant</th>
                                     <th>Email</th>
-                                    <th>Registration Date</th>
+                                    <th>Selected Venue</th>
+                                    <th>Date</th>
                                     <th>Status</th>
                                     <th class="pe-4 text-end">Action</th>
                                 </tr>
@@ -181,9 +198,17 @@
                             <tbody>
                                 @foreach (var reg in _event.Registrations)
                                 {
+                                    var regVenueName = "Primary Venue";
+                                    if (!string.IsNullOrWhiteSpace(reg.Notes) && reg.Notes.StartsWith("SelectedVenueId:"))
+                                    {
+                                        var parts = reg.Notes.Split('|');
+                                        if (parts.Length > 1) regVenueName = parts[1];
+                                    }
+
                                     <tr>
                                         <td class="ps-4 fw-bold text-dark">@reg.ParticipantName</td>
                                         <td class="text-muted">@reg.ParticipantEmail</td>
+                                        <td class="text-muted fw-bold">@regVenueName</td>
                                         <td class="text-muted">@reg.RegistrationDate.ToString("dd/MM/yyyy")</td>
                                         <td>
                                             <span class="badge @(reg.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed ? "bg-success" : reg.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Waitlisted ? "bg-info" : "bg-danger") px-2 py-1 rounded-pill shadow-sm">@reg.StatusName</span>
@@ -227,21 +252,61 @@
                     }
                     else if (AuthState.IsAdmin)
                     {
-                        <div class="p-3 bg-light border rounded-3 mb-0 shadow-sm">
-                            <p class="text-muted small mb-0 d-flex align-items-center fw-medium">
+                        <!-- ENTERPRISE ADMIN REGISTRATION CONSOLE -->
+                        <div class="p-4 bg-light border rounded-4 mb-4 shadow-sm">
+                            <p class="text-muted small mb-3 d-flex align-items-center fw-medium">
                                 <i class="bi bi-info-circle text-primary me-2 fs-5"></i>
-                                As an administrator, you manage participant registrations directly from the table console on the left.
+                                As an administrator, you can manually select any participant account and book them into this event schedule.
                             </p>
-                            @if (primaryVenue != null)
-                            {
-                                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center small fw-bold">
-                                    <span>Primary Venue Status</span>
-                                    <span class="text-@(isEventFull ? "danger" : "success")">
-                                        @(isEventFull ? "Fully Booked (0 left)" : $"{availableSeats} seats left for this event")
-                                    </span>
-                                </div>
-                            }
+                            <div class="pt-3 border-top">
+                                <label class="form-label small fw-bold text-dark mb-2">Select Participant</label>
+                                <select @bind="_adminTargetParticipantId" class="form-select py-2 mb-3 shadow-sm fw-medium">
+                                    <option value="0">-- Select participant --</option>
+                                    @foreach (var p in _allParticipants)
+                                    {
+                                        <option value="@p.Id">@p.FullName (@p.Email)</option>
+                                    }
+                                </select>
+
+                                <label class="form-label small fw-bold text-dark mb-2">Select Target Venue</label>
+                                <select @bind="_selectedVenueId" class="form-select py-2 mb-2 shadow-sm fw-medium">
+                                    @if (_event?.Venues != null)
+                                    {
+                                        @foreach (var v in _event.Venues)
+                                        {
+                                            var vConfirmed = _event.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && r.Notes != null && r.Notes.Contains($"SelectedVenueId:{v.Id}")) ?? 0;
+                                            if (vConfirmed == 0 && _event.Registrations?.Any(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && (r.Notes == null || !r.Notes.StartsWith("SelectedVenueId:"))) == true && v.IsPrimary)
+                                            {
+                                                vConfirmed = _event.Registrations.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed);
+                                            }
+                                            var vAvail = Math.Max(0, v.Capacity - vConfirmed);
+                                            
+                                            <option value="@v.Id">
+                                                @v.Name — @(vAvail == 0 ? "Fully Booked (Waitlist Only)" : $"{vAvail} seats left")
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
                         </div>
+
+                        <button class="btn @(isSelectedVenueFull ? "btn-warning" : "btn-primary") w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
+                                @onclick="AdminRegisterTargetAsync"
+                                disabled="@(_isRegistering || _adminTargetParticipantId == 0)">
+                            @if (_isRegistering) 
+                            { 
+                                <span class="spinner-border spinner-border-sm me-2"></span> 
+                                <span>Processing...</span>
+                            }
+                            else if (isSelectedVenueFull)
+                            {
+                                <i class="bi bi-clock-history me-2 fs-5"></i> <span>Add participant to waitlist</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check2-square me-2 fs-5"></i> <span>Confirm admin booking</span>
+                            }
+                        </button>
                     }
                     else if (_isRegistered)
                     {
@@ -257,22 +322,39 @@
                     }
                     else
                     {
-                        <div class="mb-4 p-3 bg-light border rounded-4 shadow-sm">
+                        <div class="mb-4 p-4 bg-light border rounded-4 shadow-sm">
                             <div class="text-muted small mb-1 fw-bold">Registering Account</div>
                             <div class="fw-bold text-dark fs-6">@AuthState.CurrentUser.FullName</div>
-                            <div class="text-muted small fw-medium mb-3">@AuthState.CurrentUser.Email</div>
+                            <div class="text-muted small fw-medium mb-4">@AuthState.CurrentUser.Email</div>
 
-                            @if (primaryVenue != null)
-                            {
-                                <div class="pt-3 border-top d-flex justify-content-between align-items-center small fw-bold">
-                                    <span>Available Seats for Event</span>
-                                    <span class="badge @(isEventFull ? "bg-danger" : "bg-success") px-2 py-1 rounded-pill shadow-sm">
-                                        @(isEventFull ? "Fully Booked (0 left)" : $"{availableSeats} / {primaryVenue.Capacity}")
-                                    </span>
-                                </div>
-                            }
+                            <!-- ENTERPRISE MULTI-VENUE SELECTION CONSOLE -->
+                            <div class="pt-3 border-top">
+                                <label class="form-label small fw-bold text-dark mb-2">Select Preferred Venue</label>
+                                <select @bind="_selectedVenueId" class="form-select py-2 mb-3 shadow-sm fw-medium">
+                                    @if (_event?.Venues != null)
+                                    {
+                                        @foreach (var v in _event.Venues)
+                                        {
+                                            var vConfirmed = _event.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && r.Notes != null && r.Notes.Contains($"SelectedVenueId:{v.Id}")) ?? 0;
+                                            if (vConfirmed == 0 && _event.Registrations?.Any(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed && (r.Notes == null || !r.Notes.StartsWith("SelectedVenueId:"))) == true && v.IsPrimary)
+                                            {
+                                                vConfirmed = _event.Registrations.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed);
+                                            }
+                                            var vAvail = Math.Max(0, v.Capacity - vConfirmed);
+                                            
+                                            <option value="@v.Id">
+                                                @v.Name — @(vAvail == 0 ? "Fully Booked (Waitlist Only)" : $"{vAvail} seats left")
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <small class="text-muted small d-block">
+                                    If your preferred venue is fully booked, you can select an alternate location with available seats or confirm to join the waitlist queue.
+                                </small>
+                            </div>
                         </div>
-                        <button class="btn @(isEventFull ? "btn-warning" : "btn-primary") w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
+
+                        <button class="btn @(isSelectedVenueFull ? "btn-warning" : "btn-primary") w-100 py-2 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
                                 @onclick="RegisterMe"
                                 disabled="@_isRegistering">
                             @if (_isRegistering) 
@@ -280,7 +362,7 @@
                                 <span class="spinner-border spinner-border-sm me-2"></span> 
                                 <span>Processing...</span>
                             }
-                            else if (isEventFull)
+                            else if (isSelectedVenueFull)
                             {
                                 <i class="bi bi-clock-history me-2 fs-5"></i> <span>Add me to waitlist</span>
                             }
@@ -291,7 +373,7 @@
                         </button>
                     }
                     <div class="pt-4 mt-4 border-top text-muted small text-center d-flex align-items-center justify-content-center fw-bold">
-                        <i class="bi bi-people me-2 text-primary opacity-75"></i> @confirmedCount participant(s) currently confirmed
+                        <i class="bi bi-people me-2 text-primary opacity-75"></i> @_event?.Registrations?.Count(r => r.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Confirmed) participant(s) currently confirmed
                     </div>
                 </div>
             </div>
@@ -303,12 +385,15 @@
     [Parameter] public int Id { get; set; }
 
     private EventDetailViewModel? _event;
+    private List<ParticipantViewModel> _allParticipants = new();
     private bool _isLoading = true;
     private bool _isRegistering = false;
     private string _errorMessage = string.Empty;
     private string _successMessage = string.Empty;
     private bool _isRegistered = false;
     private int? _myRegistrationId;
+    private int _selectedVenueId;
+    private int _adminTargetParticipantId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -330,7 +415,15 @@
             if (entity != null)
             {
                 _event = EventDetailViewModel.FromEntity(entity);
+                var primary = _event.Venues?.FirstOrDefault(v => v.IsPrimary) ?? _event.Venues?.FirstOrDefault();
+                if (primary != null && _selectedVenueId == 0) _selectedVenueId = primary.Id;
                 await CheckMyRegistrationAsync();
+
+                if (AuthState.IsAdmin)
+                {
+                    var allP = await ParticipantService.GetAllParticipantsAsync();
+                    _allParticipants = allP.Select(ParticipantViewModel.FromEntity).ToList();
+                }
             }
             else
             {
@@ -384,10 +477,13 @@
             _errorMessage = string.Empty;
             _successMessage = string.Empty;
 
-            var reg = await RegistrationService.RegisterParticipantAsync(AuthState.UserId.Value, Id);
+            var selectedVenue = _event?.Venues?.FirstOrDefault(v => v.Id == _selectedVenueId);
+            var notes = selectedVenue != null ? $"SelectedVenueId:{selectedVenue.Id}|{selectedVenue.Name}" : null;
+
+            var reg = await RegistrationService.RegisterParticipantAsync(AuthState.UserId.Value, Id, notes);
             _successMessage = reg.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Waitlisted 
-                ? "The venue is at full capacity for this event. You have been successfully added to the waitlist queue."
-                : "Your registration has been successfully confirmed!";
+                ? $"The selected venue ({selectedVenue?.Name}) is at full capacity. You have been successfully added to the waitlist queue."
+                : $"Your registration for {selectedVenue?.Name} has been successfully confirmed!";
             await LoadAsync();
         }
         catch (CommunityEventManagement.Domain.Exceptions.DuplicateRegistrationException)
@@ -397,6 +493,39 @@
         catch (Exception ex)
         {
             _errorMessage = $"Registration failed: {ex.Message}";
+        }
+        finally
+        {
+            _isRegistering = false;
+        }
+    }
+
+    private async Task AdminRegisterTargetAsync()
+    {
+        if (!AuthState.IsAdmin || _adminTargetParticipantId == 0) return;
+        try
+        {
+            _isRegistering = true;
+            _errorMessage = string.Empty;
+            _successMessage = string.Empty;
+
+            var selectedVenue = _event?.Venues?.FirstOrDefault(v => v.Id == _selectedVenueId);
+            var notes = selectedVenue != null ? $"SelectedVenueId:{selectedVenue.Id}|{selectedVenue.Name}" : null;
+
+            var reg = await RegistrationService.RegisterParticipantAsync(_adminTargetParticipantId, Id, notes);
+            _successMessage = reg.Status == CommunityEventManagement.Domain.Enums.RegistrationStatus.Waitlisted 
+                ? $"Participant successfully queued into the waitlist for {selectedVenue?.Name}."
+                : $"Participant successfully booked into {selectedVenue?.Name}!";
+            _adminTargetParticipantId = 0;
+            await LoadAsync();
+        }
+        catch (CommunityEventManagement.Domain.Exceptions.DuplicateRegistrationException)
+        {
+            _errorMessage = "This participant is already registered for this event.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Admin booking failed: {ex.Message}";
         }
         finally
         {

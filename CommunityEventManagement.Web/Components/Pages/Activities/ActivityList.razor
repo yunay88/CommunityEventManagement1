@@ -1,98 +1,111 @@
-@* FILE: CommunityEventManagement.Web/Components/Pages/Activities/ActivityList.razor *@
-@* REPLACE ENTIRE FILE *@
 @page "/activities"
 @using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Web.ViewModels
 @inject IActivityService ActivityService
 @inject AuthStateService AuthState
 @implements IDisposable
 
-<PageTitle>Activities</PageTitle>
+<PageTitle>Activities Console — Community Events</PageTitle>
 
-<div class="page-header">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col">
-                <h1 class="fw-bold mb-0">
-                    <i class="bi bi-lightning"></i> Activities
-                </h1>
-            </div>
-            @if (AuthState.IsAdmin)
-            {
-            <div class="col-auto">
-                <a href="/activities/create" class="btn btn-primary">
-                    <i class="bi bi-plus"></i> Add Activity
-                </a>
-            </div>
-            }
-        </div>
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Activities Console</h1>
+        <p class="text-muted small mb-0">Modular event sub-items, timing allocations, and interactive community workflows.</p>
     </div>
+    @if (AuthState.IsAdmin)
+    {
+        <a href="/activities/create" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> Add Activity
+        </a>
+    }
 </div>
 
 <div class="container pb-5">
-    <AlertMessage Message="@_success" Type="success"
-                  OnDismissed="@(() => _success = string.Empty)" />
-    <AlertMessage Message="@_error" Type="danger"
-                  OnDismissed="@(() => _error = string.Empty)" />
+    <AlertMessage Message="@_success" Type="success" OnDismissed="@(() => _success = string.Empty)" />
+    <AlertMessage Message="@_error" Type="danger" OnDismissed="@(() => _error = string.Empty)" />
 
     @if (!AuthState.IsAdmin)
     {
-        <div class="alert alert-info">
-            <i class="bi bi-eye"></i> Read-only. <a href="/login">Login as Admin</a> to manage activities.
+        <div class="alert alert-info mb-4 shadow-sm d-flex align-items-center">
+            <i class="bi bi-eye me-2 fs-5"></i>
+            <div>Read-only mode. <a href="/login" class="fw-bold text-decoration-none">Sign in as Administrator</a> to manage activities.</div>
         </div>
     }
+
+    <!-- Modern Live Search Bar Console -->
+    <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <div class="d-flex align-items-center mb-1">
+            <i class="bi bi-search text-primary me-3 fs-5"></i>
+            <div class="flex-grow-1">
+                <input class="form-control border-0 bg-slate-50 py-2 shadow-none fw-medium text-dark" placeholder="Type activity name..."
+                       @bind="_searchTerm" @bind:event="oninput" />
+            </div>
+            @if (!string.IsNullOrEmpty(_searchTerm))
+            {
+                <button class="btn btn-sm btn-outline-secondary py-1 px-3 ms-3 fw-bold shadow-sm" @onclick="() => _searchTerm = string.Empty">Clear</button>
+            }
+        </div>
+    </div>
 
     <LoadingSpinner IsLoading="@_loading" />
 
     @if (!_loading)
     {
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead>
+        <div class="modern-container card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-5">
+            <div class="p-4 border-bottom bg-slate-50 d-flex justify-content-between align-items-center">
+                <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                    <i class="bi bi-lightning-charge text-warning me-2"></i> Activity Directory
+                </h2>
+                <span class="badge bg-secondary px-3 py-1 rounded-pill shadow-sm">@_filteredActivities.Count active item(s)</span>
+            </div>
+
+            @if (!_filteredActivities.Any())
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-lightning-slash display-4 text-muted mb-3 d-block"></i>
+                    <h5 class="fw-bold text-dark mb-1">No matching activities found</h5>
+                    <p class="text-muted mb-0">No event activity items match your active search filter.</p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Duration</th>
+                            <th class="ps-4">Activity Name</th>
+                            <th>Category Type</th>
                             <th>Description</th>
-                            <th></th>
+                            <th>Duration</th>
+                            @if (AuthState.IsAdmin)
+                            {
+                                <th class="pe-4 text-end">Action</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var a in _activities)
+                        @foreach (var act in _filteredActivities)
                         {
                             <tr>
-                                <td class="fw-semibold">@a.Name</td>
+                                <td class="ps-4 fw-bold text-dark">@act.Name</td>
                                 <td>
-                                    <span class="badge bg-info text-dark">
-                                        @a.TypeName
-                                    </span>
+                                    <span class="badge bg-secondary px-3 py-1 rounded-pill shadow-sm">@act.TypeName</span>
                                 </td>
-                                <td>@a.DurationFormatted</td>
-                                <td class="text-muted small">
-                                    @(a.Description.Length > 60
-                                        ? a.Description[..60] + "..."
-                                        : a.Description)
-                                </td>
-                                <td>
-                                    @if (AuthState.IsAdmin)
-                                    {
-                                    <div class="d-flex gap-1">
-                                        <a href="/activities/edit/@a.Id"
-                                           class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-danger"
-                                                @onclick="() => ShowDelete(a.Id, a.Name)">
-                                            <i class="bi bi-trash"></i>
+                                <td class="text-secondary fw-medium">@act.Description</td>
+                                <td class="text-muted fw-bold"><i class="bi bi-clock me-1 opacity-75"></i> @act.DurationFormatted</td>
+                                @if (AuthState.IsAdmin)
+                                {
+                                    <td class="pe-4 text-end">
+                                        <button class="btn btn-sm btn-outline-danger py-1 px-3 fw-bold shadow-sm"
+                                                @onclick="() => ShowDelete(act.Id, act.Name)">
+                                            Delete
                                         </button>
-                                    </div>
-                                    }
-                                </td>
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
                 </table>
-            </div>
+            }
         </div>
     }
 </div>
@@ -106,11 +119,19 @@
 @code {
     private List<ActivityViewModel> _activities = new();
     private bool _loading = true;
+    private string _searchTerm = string.Empty;
     private bool _showDelete;
     private int _deleteId;
     private string _deleteName = string.Empty;
     private string _success = string.Empty;
     private string _error = string.Empty;
+
+    private List<ActivityViewModel> _filteredActivities => string.IsNullOrWhiteSpace(_searchTerm)
+        ? _activities
+        : _activities.Where(a => 
+            a.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) || 
+            (a.Description != null && a.Description.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+          ).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -143,7 +164,7 @@
         {
             _showDelete = false;
             await ActivityService.DeleteActivityAsync(_deleteId);
-            _success = $"Activity deleted.";
+            _success = $"Activity '{_deleteName}' deleted.";
             await Load();
         }
         catch (Exception ex) { _error = ex.Message; }

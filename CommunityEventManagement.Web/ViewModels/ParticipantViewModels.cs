@@ -14,6 +14,7 @@ namespace CommunityEventManagement.Web.ViewModels
         public string? PhoneNumber { get; set; }
         public int ActiveRegistrations { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<RegistrationViewModel> Registrations { get; set; } = new();
 
         public static ParticipantViewModel FromEntity(Participant p)
         {
@@ -24,7 +25,8 @@ namespace CommunityEventManagement.Web.ViewModels
                 Email = p.Email,
                 PhoneNumber = p.PhoneNumber,
                 ActiveRegistrations = p.GetActiveRegistrationsCount(),
-                CreatedAt = p.CreatedAt
+                CreatedAt = p.CreatedAt,
+                Registrations = p.RegistrationsCollection?.Select(RegistrationViewModel.FromEntity).ToList() ?? new()
             };
         }
     }

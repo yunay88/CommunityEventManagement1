@@ -1,14 +1,181 @@
 @page "/participants/{Id:int}"
+@using CommunityEventManagement.Web.Services
+@using CommunityEventManagement.Domain.Enums
+@using CommunityEventManagement.Domain.Interfaces.Services
 @inject IParticipantService ParticipantService
+@inject IRegistrationService RegistrationService
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
-<PageTitle>Participant Detail</PageTitle>
+<PageTitle>Participant Specification — Community Events</PageTitle>
+
+<div class="page-header-console bg-white border-bottom py-4 px-5 d-flex justify-content-between align-items-center shadow-sm mb-5">
+    <div>
+        <nav aria-label="breadcrumb" class="mb-1">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/participants" class="text-decoration-none text-muted small fw-semibold">Participants</a></li>
+                <li class="breadcrumb-item active small fw-bold" aria-current="page">@(_p?.FullName ?? "Detail")</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold text-dark mb-0">@(_p?.FullName ?? "Participant Specification")</h1>
+    </div>
+    <div class="d-flex gap-2">
+        @if (AuthState.IsAdmin)
+        {
+            <a href="/participants/edit/@Id" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">
+                <i class="bi bi-pencil me-2"></i> Edit Account
+            </a>
+        }
+        <a href="/participants" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Back to list
+        </a>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Error:</strong> @_error</div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(_success))
+    {
+        <div class="alert alert-success mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div><strong>Success:</strong> @_success</div>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else if (_p == null)
+    {
+        <div class="modern-container card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-question-circle display-4 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold text-dark mb-2">Participant not found</h4>
+            <p class="text-muted mb-4">The participant account you are looking for does not exist or has been removed.</p>
+            <a href="/participants" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">Return to participants</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-5">
+            <!-- Main Content Grid -->
+            <div class="col-lg-4">
+                <div class="modern-container card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+                    <h2 class="h5 fw-bold text-dark mb-4 pb-3 border-bottom d-flex align-items-center">
+                        <i class="bi bi-person-badge text-primary me-2"></i> Profile Overview
+                    </h2>
+                    <div class="mb-4">
+                        <div class="text-muted small fw-bold mb-1">Full Name</div>
+                        <div class="text-dark fw-bold fs-5">@_p.FullName</div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-muted small fw-bold mb-1">Email Address</div>
+                        <div class="text-secondary fw-medium">@_p.Email</div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-muted small fw-bold mb-1">Phone Number</div>
+                        <div class="text-secondary fw-medium">@(_p.PhoneNumber ?? "—")</div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-muted small fw-bold mb-1">Active Registrations</div>
+                        <div class="badge bg-primary px-3 py-1 rounded-pill shadow-sm fs-6 mt-1">@_p.ActiveRegistrations Confirmed</div>
+                    </div>
+                    <div class="pt-4 border-top text-muted small text-center fw-medium">
+                        Account created on @_p.CreatedAt.ToString("dd MMM yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registered Events Console (Enterprise Add) -->
+            <div class="col-lg-8">
+                <div class="modern-container card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-5">
+                    <div class="p-4 border-bottom bg-slate-50 d-flex justify-content-between align-items-center">
+                        <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center">
+                            <i class="bi bi-calendar-check text-success me-2"></i> Registered Events
+                        </h2>
+                        <span class="badge bg-secondary px-3 py-1 rounded-pill shadow-sm">@_p.Registrations.Count Total</span>
+                    </div>
+
+                    @if (!_p.Registrations.Any())
+                    {
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
+                            <h5 class="fw-bold text-dark mb-1">No registered events</h5>
+                            <p class="text-muted mb-0">This participant has not registered for any community events yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Event</th>
+                                    <th>Event Date</th>
+                                    <th>Selected Venue</th>
+                                    <th>Status</th>
+                                    <th class="pe-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reg in _p.Registrations)
+                                {
+                                    var regVenueName = "Primary Venue";
+                                    if (!string.IsNullOrWhiteSpace(reg.Notes) && reg.Notes.StartsWith("SelectedVenueId:"))
+                                    {
+                                        var parts = reg.Notes.Split('|');
+                                        if (parts.Length > 1) regVenueName = parts[1];
+                                    }
+
+                                    <tr>
+                                        <td class="ps-4 fw-bold">
+                                            <a href="/events/@reg.EventId" class="text-primary text-decoration-none">@reg.EventName</a>
+                                        </td>
+                                        <td class="text-muted fw-medium">@reg.EventStartDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-muted fw-bold">@regVenueName</td>
+                                        <td>
+                                            <span class="badge @(reg.Status == RegistrationStatus.Confirmed ? "bg-success" : reg.Status == RegistrationStatus.Waitlisted ? "bg-info" : "bg-danger") px-2 py-1 rounded-pill shadow-sm">@reg.StatusName</span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            @if (reg.Status == RegistrationStatus.Waitlisted)
+                                            {
+                                                <button class="btn btn-sm btn-success py-1 px-3 fw-bold shadow-sm me-1"
+                                                        @onclick="() => ApproveAsync(reg.Id)">
+                                                    <i class="bi bi-check-lg"></i> Approve
+                                                </button>
+                                            }
+                                            @if (reg.Status != RegistrationStatus.Cancelled)
+                                            {
+                                                <button class="btn btn-sm btn-outline-danger py-1 px-3 fw-bold shadow-sm"
+                                                        @onclick="() => CancelAsync(reg.Id)">
+                                                    Cancel
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public int Id { get; set; }
     private ParticipantViewModel? _p;
     private bool _loading = true;
+    private string _success = string.Empty;
+    private string _error = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -24,45 +191,42 @@
 
     private async Task LoadAsync()
     {
+        _loading = true;
         var entity = await ParticipantService.GetParticipantWithRegistrationsAsync(Id);
         if (entity != null) _p = ParticipantViewModel.FromEntity(entity);
         _loading = false;
+        StateHasChanged();
     }
-}
 
-@if (_loading)
-{
-    <p class="text-muted">Loading...</p>
-}
-else if (_p == null)
-{
-    <div class="alert alert-warning">Participant not found.</div>
-}
-else
-{
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold mb-0">@_p.FullName</h2>
-        <div class="d-flex gap-2">
-            <a href="/participants" class="btn btn-outline-secondary">Back</a>
-            <a href="/participants/edit/@Id" class="btn btn-primary">Edit</a>
-        </div>
-    </div>
+    private async Task ApproveAsync(int regId)
+    {
+        try
+        {
+            _error = string.Empty;
+            _success = string.Empty;
+            await RegistrationService.ConfirmRegistrationAsync(regId);
+            _success = "Participant successfully promoted from waitlist to confirmed status!";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Approval failed: {ex.Message}";
+        }
+    }
 
-    <div class="card">
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Email</dt>
-                <dd class="col-sm-9">@_p.Email</dd>
-
-                <dt class="col-sm-3">Phone</dt>
-                <dd class="col-sm-9">@(_p.PhoneNumber ?? "—")</dd>
-
-                <dt class="col-sm-3">Active Registrations</dt>
-                <dd class="col-sm-9">@_p.ActiveRegistrations</dd>
-
-                <dt class="col-sm-3">Joined</dt>
-                <dd class="col-sm-9">@_p.CreatedAt.ToString("dd MMM yyyy")</dd>
-            </dl>
-        </div>
-    </div>
+    private async Task CancelAsync(int regId)
+    {
+        try
+        {
+            _error = string.Empty;
+            _success = string.Empty;
+            await RegistrationService.CancelRegistrationAsync(regId, "Cancelled by admin");
+            _success = "Registration cancelled successfully.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Cancel failed: {ex.Message}";
+        }
+    }
 }

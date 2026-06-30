@@ -17,15 +17,17 @@
 
                 @if (!string.IsNullOrEmpty(_successMessage))
                 {
-                    <div class="alert alert-success mb-4" role="alert">
-                        @_successMessage
+                    <div class="alert alert-success mb-4 d-flex align-items-center shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                        <div>@_successMessage</div>
                     </div>
                 }
 
                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
-                    <div class="alert alert-danger mb-4" role="alert">
-                        @_errorMessage
+                    <div class="alert alert-danger mb-4 d-flex align-items-center shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <div>@_errorMessage</div>
                     </div>
                 }
 
@@ -39,7 +41,10 @@
                     </div>
 
                     <div class="mb-5">
-                        <label class="form-label">Password</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0">Password</label>
+                            <a href="/forgot-password" class="text-primary text-decoration-none small fw-bold">Forgot password?</a>
+                        </div>
                         <input type="password" @bind="_model.Password" class="form-control py-2" placeholder="Enter your password" />
                         <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
                     </div>
@@ -79,6 +84,10 @@
         if (uri.Contains("registered=true"))
         {
             _successMessage = "Account created successfully. Please sign in.";
+        }
+        else if (uri.Contains("reset=true"))
+        {
+            _successMessage = "Password successfully reset. Please sign in with your new credentials.";
         }
 
         if (AuthState.IsAuthenticated)

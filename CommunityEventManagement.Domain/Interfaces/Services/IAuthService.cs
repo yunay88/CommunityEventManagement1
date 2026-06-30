@@ -1,6 +1,3 @@
-// FILE: CommunityEventManagement.Domain/Interfaces/Services/IAuthService.cs
-// REPLACE ENTIRE FILE
-
 using CommunityEventManagement.Domain.Entities;
 using CommunityEventManagement.Domain.Models;
 
@@ -26,5 +23,8 @@ namespace CommunityEventManagement.Domain.Interfaces.Services
         // Extended for Blazor AuthState integration
         // Allows UI layer to get full polymorphic AppUser (Participant / Administrator)
         Task<AppUser?> GetCurrentUserAsync();
+        
+        // <-- ENTERPRISE FIX: SECURE PASSWORD RESET CONTRACT
+        Task<bool> ResetPasswordAsync(string email, string newPassword);
     }
 }

@@ -63,5 +63,15 @@ namespace CommunityEventManagement.Domain.Entities
             IsActive = true;
             MarkAsUpdated();
         }
+
+        // <-- ENTERPRISE FIX: SECURE PASSWORD MODIFICATION CONTRACT
+        public void UpdatePasswordHash(string newPasswordHash)
+        {
+            if (string.IsNullOrWhiteSpace(newPasswordHash))
+                throw new ArgumentException("Password hash cannot be empty.", nameof(newPasswordHash));
+
+            PasswordHash = newPasswordHash;
+            MarkAsUpdated();
+        }
     }
 }
